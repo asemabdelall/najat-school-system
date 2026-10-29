@@ -19,6 +19,8 @@ import type { IncidentStatus } from '@/lib/domain/behavior';
 import { cn } from '@/lib/utils';
 import { useEnrollmentCounts } from '@/features/classes/api';
 import { AbsenceChart, RateChart, type TrendRow } from './AttendanceCharts';
+import { Stagger, StaggerItem } from '@/components/motion/Stagger';
+import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
 
 type Overview = {
   active_students: number; classes: number; active_enrollments: number;
@@ -90,34 +92,39 @@ function ManagerDashboard() {
       {overview.isError ? (
         <Card className="mb-5"><ErrorState error={overview.error} onRetry={() => overview.refetch()} /></Card>
       ) : (
-        <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard loading={loading} label="الطلاب المنتظمون" value={formatNumber(o?.active_students)} hint={`${formatNumber(o?.active_enrollments)} تسجيل في ${formatNumber(o?.classes)} فصلًا`} icon={<GraduationCap />} to="/students" />
-          <StatCard loading={loading} label="نسبة الحضور" value={formatPercent(o?.attendance_rate)} hint={`من ${formatNumber((o?.present ?? 0) + (o?.late ?? 0) + (o?.absent ?? 0) + (o?.excused ?? 0))} سجل مرصود`} icon={<Percent />} tone="success" to="/reports" />
-          <StatCard loading={loading} label="حالات الغياب" value={formatNumber(o?.absent)} hint={`${formatNumber(o?.excused)} غياب بعذر · ${formatNumber(o?.late)} تأخر`} icon={<UserX />} tone="danger" to="/reports" />
+        <Stagger className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard loading={loading} label="الطلاب المنتظمون" value={<AnimatedNumber value={o?.active_students} />} hint={`${formatNumber(o?.active_enrollments)} تسجيل في ${formatNumber(o?.classes)} فصلًا`} icon={<GraduationCap />} to="/students" />
+          <StatCard loading={loading} label="نسبة الحضور" value={<AnimatedNumber value={o?.attendance_rate} format={formatPercent} />} hint={`من ${formatNumber((o?.present ?? 0) + (o?.late ?? 0) + (o?.absent ?? 0) + (o?.excused ?? 0))} سجل مرصود`} icon={<Percent />} tone="success" to="/reports" />
+          <StatCard loading={loading} label="حالات الغياب" value={<AnimatedNumber value={o?.absent} />} hint={`${formatNumber(o?.excused)} غياب بعذر · ${formatNumber(o?.late)} تأخر`} icon={<UserX />} tone="danger" to="/reports" />
           <StatCard loading={loading} label="الجلسات المعتمدة" value={`${formatNumber(o?.sessions_submitted)} / ${formatNumber(o?.sessions_total)}`} hint="الجلسات التي بدأ رصدها في الفترة" icon={<CalendarCheck2 />} tone="info" to="/attendance" />
-          <StatCard loading={loading} label="بلاغات بانتظار القرار" value={formatNumber(o?.pending_incidents)} icon={<Flag />} tone="warning" to="/behavior?status=open" />
-          <StatCard loading={loading} label="مهام متابعة نشطة" value={formatNumber(o?.open_follow_ups)} icon={<ListChecks />} to="/follow-ups" />
-          <StatCard loading={loading} label="مهام متأخرة" value={formatNumber(o?.overdue_follow_ups)} hint={o?.overdue_follow_ups ? 'تجاوزت تاريخ الاستحقاق' : 'لا توجد مهام متأخرة'} icon={<AlertTriangle />} tone={o?.overdue_follow_ups ? 'danger' : 'success'} to="/follow-ups?overdue=1&status=active" />
-          <StatCard loading={loading} label="أعذار بانتظار المراجعة" value={formatNumber(o?.pending_excuses)} icon={<FileClock />} tone="info" to="/attendance/excuses" />
-        </div>
+          <StatCard loading={loading} label="بلاغات بانتظار القرار" value={<AnimatedNumber value={o?.pending_incidents} />} icon={<Flag />} tone="warning" to="/behavior?status=open" />
+          <StatCard loading={loading} label="مهام متابعة نشطة" value={<AnimatedNumber value={o?.open_follow_ups} />} icon={<ListChecks />} to="/follow-ups" />
+          <StatCard loading={loading} label="مهام متأخرة" value={<AnimatedNumber value={o?.overdue_follow_ups} />} hint={o?.overdue_follow_ups ? 'تجاوزت تاريخ الاستحقاق' : 'لا توجد مهام متأخرة'} icon={<AlertTriangle />} tone={o?.overdue_follow_ups ? 'danger' : 'success'} to="/follow-ups?overdue=1&status=active" />
+          <StatCard loading={loading} label="أعذار بانتظار المراجعة" value={<AnimatedNumber value={o?.pending_excuses} />} icon={<FileClock />} tone="info" to="/attendance/excuses" />
+        </Stagger>
       )}
 
-      <div className="mb-5 grid gap-5 xl:grid-cols-2">
+      <Stagger delay={0.15} className="mb-5 grid gap-5 xl:grid-cols-2">
+        <StaggerItem>
         <Card>
           <CardHeader title="نسبة الحضور اليومية" description="(حاضر + متأخر) ÷ المرصود. لا تُحتسب الأيام أو الطلاب غير المرصودين." />
           <CardContent>
             {trend.isPending ? <LoadingState rows={3} className="p-0" /> : trend.isError ? <ErrorState error={trend.error} onRetry={() => trend.refetch()} /> : trend.data.length === 0 ? <EmptyState title="لا توجد بيانات حضور مرصودة في الفترة" /> : <RateChart data={trend.data} />}
           </CardContent>
         </Card>
+        </StaggerItem>
+        <StaggerItem>
         <Card>
           <CardHeader title="الغياب والتأخر اليومي" description="عدد السجلات غير الحاضرة لكل يوم" />
           <CardContent>
             {trend.isPending ? <LoadingState rows={3} className="p-0" /> : trend.isError ? <ErrorState error={trend.error} onRetry={() => trend.refetch()} /> : trend.data.length === 0 ? <EmptyState title="لا توجد بيانات" /> : <AbsenceChart data={trend.data} />}
           </CardContent>
         </Card>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <Stagger delay={0.25} className="grid gap-5 xl:grid-cols-2">
+        <StaggerItem>
         <Card>
           <CardHeader icon={<Flag />} title="بلاغات تنتظر المراجعة" actions={<Button asChild variant="ghost" size="sm"><Link to="/behavior?status=open">عرض الكل</Link></Button>} />
           {incidents.isPending ? <LoadingState rows={3} /> : incidents.isError ? <ErrorState error={incidents.error} /> : incidents.data.length === 0 ? <EmptyState icon={<CheckCircle2 />} title="لا توجد بلاغات معلقة" className="py-8" /> : (
@@ -136,6 +143,8 @@ function ManagerDashboard() {
             </ul>
           )}
         </Card>
+        </StaggerItem>
+        <StaggerItem>
         <Card>
           <CardHeader icon={<AlertTriangle />} title="مهام متابعة متأخرة" actions={<Button asChild variant="ghost" size="sm"><Link to="/follow-ups?overdue=1&status=active">عرض الكل</Link></Button>} />
           {overdue.isPending ? <LoadingState rows={3} /> : overdue.isError ? <ErrorState error={overdue.error} /> : overdue.data.length === 0 ? <EmptyState icon={<CheckCircle2 />} title="لا توجد مهام متأخرة" className="py-8" /> : (
@@ -154,7 +163,8 @@ function ManagerDashboard() {
             </ul>
           )}
         </Card>
-      </div>
+        </StaggerItem>
+      </Stagger>
     </>
   );
 }
@@ -191,12 +201,12 @@ function TeacherDashboard() {
 
   return (
     <>
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard loading={classes.isPending} label="فصولي" value={formatNumber(classes.data?.length)} hint={`${formatNumber(totalStudents)} طالب`} icon={<School />} to="/classes" />
-        <StatCard loading={sessions.isPending} label="جلسات بانتظار الاعتماد" value={formatNumber(pendingSlots)} hint={isSchoolDay(today) ? 'لليوم' : `لـ ${formatWeekday(day)}`} icon={<Clock />} tone={pendingSlots ? 'warning' : 'success'} to="/attendance" />
-        <StatCard loading={tasks.isPending} label="مهامي النشطة" value={formatNumber(tasks.data?.length)} icon={<ListChecks />} to="/follow-ups" />
-        <StatCard loading={tasks.isPending} label="مهام متأخرة" value={formatNumber(overdue)} icon={<AlertTriangle />} tone={overdue ? 'danger' : 'success'} to="/follow-ups?overdue=1" />
-      </div>
+      <Stagger className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard loading={classes.isPending} label="فصولي" value={<AnimatedNumber value={classes.data?.length} />} hint={`${formatNumber(totalStudents)} طالب`} icon={<School />} to="/classes" />
+        <StatCard loading={sessions.isPending} label="جلسات بانتظار الاعتماد" value={<AnimatedNumber value={pendingSlots} />} hint={isSchoolDay(today) ? 'لليوم' : `لـ ${formatWeekday(day)}`} icon={<Clock />} tone={pendingSlots ? 'warning' : 'success'} to="/attendance" />
+        <StatCard loading={tasks.isPending} label="مهامي النشطة" value={<AnimatedNumber value={tasks.data?.length} />} icon={<ListChecks />} to="/follow-ups" />
+        <StatCard loading={tasks.isPending} label="مهام متأخرة" value={<AnimatedNumber value={overdue} />} icon={<AlertTriangle />} tone={overdue ? 'danger' : 'success'} to="/follow-ups?overdue=1" />
+      </Stagger>
       <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr]">
         <Card>
           <CardHeader icon={<CalendarCheck2 />} title={`رصد ${isSchoolDay(today) ? 'اليوم' : formatWeekday(day)}`} description={formatDate(day)} />

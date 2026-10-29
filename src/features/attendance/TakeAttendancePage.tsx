@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
+import { m } from 'motion/react';
+import { spring } from '@/lib/motion';
 import { AlertTriangle, CalendarX2, Check, CheckCheck, Clock, FileCheck2, History, Lock, RotateCcw, Save, Send, Unlock, X } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
@@ -30,29 +32,33 @@ const STATUS_STYLE: Record<AttendanceStatus, { icon: React.ElementType; on: stri
   excused: { icon: FileCheck2, on: 'border-info bg-info text-white dark:text-slate-950' },
 };
 
-/** Radio-group of the four statuses for one student. */
-function StatusPicker({ name, value, disabled, onChange }: { name: string; value: AttendanceStatus | null; disabled: boolean; onChange: (s: AttendanceStatus) => void }) {
+/** Radio-group of the four statuses for one student; the highlight glides to the chosen status. */
+function StatusPicker({ id, name, value, disabled, onChange }: { id: string; name: string; value: AttendanceStatus | null; disabled: boolean; onChange: (s: AttendanceStatus) => void }) {
   return (
     <div role="radiogroup" aria-label={`حالة ${name}`} className="inline-flex flex-wrap gap-1">
       {ATTENDANCE_STATUSES.map((s) => {
         const Icon = STATUS_STYLE[s].icon;
         const checked = value === s;
         return (
-          <button
+          <m.button
             key={s}
             type="button"
             role="radio"
             aria-checked={checked}
             disabled={disabled}
             onClick={() => onChange(s)}
+            whileTap={disabled ? undefined : { scale: 0.94 }}
             className={cn(
-              'inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-              checked ? STATUS_STYLE[s].on : 'border-line-strong bg-surface text-fg-muted hover:bg-surface-hover hover:text-fg',
+              'relative inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60',
+              checked ? 'border-transparent text-white dark:text-slate-950' : 'border-line-strong bg-surface text-fg-muted hover:bg-surface-hover hover:text-fg',
             )}
           >
-            <Icon className="size-3.5" aria-hidden />
-            {ATTENDANCE_LABELS[s]}
-          </button>
+            {checked && (
+              <m.span layoutId={`att-${id}`} transition={spring.indicator} className={cn('absolute inset-0 rounded-md', STATUS_STYLE[s].on)} aria-hidden />
+            )}
+            <Icon className="relative size-3.5" aria-hidden />
+            <span className="relative">{ATTENDANCE_LABELS[s]}</span>
+          </m.button>
         );
       })}
     </div>
@@ -260,7 +266,7 @@ export function TakeAttendancePage() {
                 </label>
               </div>
               <div className="h-1 w-full overflow-hidden rounded-full bg-surface-sunken" aria-hidden>
-                <div className="h-full transition-[width] [background:var(--brand-gradient)]" style={{ width: `${(counts.marked / students.length) * 100}%` }} />
+                <m.div className="h-full [background:var(--brand-gradient)]" animate={{ width: `${(counts.marked / students.length) * 100}%` }} transition={spring.sheet} />
               </div>
             </div>
 
@@ -279,7 +285,7 @@ export function TakeAttendancePage() {
                         {changed && <span className="font-semibold text-warning">· غير محفوظ</span>}
                       </p>
                     </div>
-                    <StatusPicker name={s.full_name} value={m?.status ?? null} disabled={readOnly} onChange={(st) => setMark(s.student_id, { status: st, minutes_late: st === 'late' ? (m?.minutes_late ?? 5) : null })} />
+                    <StatusPicker id={s.student_id} name={s.full_name} value={m?.status ?? null} disabled={readOnly} onChange={(st) => setMark(s.student_id, { status: st, minutes_late: st === 'late' ? (m?.minutes_late ?? 5) : null })} />
                     <div className="flex gap-2">
                       {m?.status === 'late' && (
                         <label className="flex shrink-0 items-center gap-1 text-xs text-fg-muted">

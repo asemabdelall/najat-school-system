@@ -3,7 +3,9 @@ import { Tabs as T } from 'radix-ui';
 import { cn } from '@/lib/utils';
 
 export const Tabs = T.Root;
-export const TabsContent = T.Content;
+export function TabsContent({ className, ...props }: React.ComponentProps<typeof T.Content>) {
+  return <T.Content className={cn('data-[state=active]:animate-scale-in', className)} {...props} />;
+}
 
 export function TabsList({ className, ...props }: React.ComponentProps<typeof T.List>) {
   return (

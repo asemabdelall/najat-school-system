@@ -18,13 +18,15 @@ School management platform for **Al-Najat Boys Secondary School, Hawally (Kuwait
 | Dashboards | Manager: KPIs for a selectable range, validated charts, pending reviews, overdue tasks. Teacher: today's sessions, own tasks, own reports |
 | Notifications | Database-backed; read/unread/delete; 60-second refresh; no sensitive content |
 | Reports | Student attendance, class summary, daily trend, behaviour (category × status), follow-ups by assignee; UTF-8 BOM CSV; print layout; same RLS scope as the screen |
+| Installable app (PWA) | Installs to the home screen (Android/desktop prompt, iOS step-by-step guide); standalone full-screen, RTL manifest, maskable icons, iOS splash screens, home-screen shortcuts (take attendance, report incident, follow-ups, students), store screenshots; offline app shell with an offline banner; in-app "new version" card (no surprise reloads); unread count on the app icon badge; safe-area aware |
+| Mobile UX & motion | Bottom tab bar (role-aware) + "More" drawer on phones; dialogs become draggable bottom sheets; animated page transitions, staggered lists/cards, shared-layout nav indicators, count-up KPIs, animated attendance status pills and progress; honours "reduce motion" |
 | Admin | Users (create via Edge Function, grant/revoke roles, activate/deactivate, reset password), school settings, behaviour categories, immutable audit log viewer |
 
-**Out of scope (by design):** student/parent portals, mobile apps, SMS/WhatsApp, payments, automatic disciplinary decisions, government-system integrations.
+**Out of scope (by design):** student/parent portals, native app-store apps, SMS/WhatsApp, payments, automatic disciplinary decisions, government-system integrations.
 
 ## Stack
 
-React 19 + TypeScript (strict) + Vite 8 · React Router 8 · Tailwind CSS 4 with design tokens · shadcn-style primitives on Radix (`radix-ui`) · Lucide · TanStack Query 5 · React Hook Form + Zod 4 · Recharts 3 · Supabase (Auth, Postgres, RLS, Edge Functions) · Vitest + Testing Library · Playwright.
+React 19 + TypeScript (strict) + Vite 8 · React Router 8 · Tailwind CSS 4 with design tokens · Motion (`motion/react`, LazyMotion `domMax`) · vite-plugin-pwa (Workbox) · shadcn-style primitives on Radix (`radix-ui`) · Lucide · TanStack Query 5 · React Hook Form + Zod 4 · Recharts 3 · Supabase (Auth, Postgres, RLS, Edge Functions) · Vitest + Testing Library · Playwright.
 
 ```
 src/
@@ -33,6 +35,8 @@ src/
   components/      layout (AppShell, Logo), StudentPicker
   features/<area>/ pages + feature data hooks (students, classes, attendance, behavior,
                    followups, dashboard, notifications, reports, users, settings, audit)
+  pwa/             install + update prompts (PwaPrompts, useInstallPrompt)
+  components/motion/ Stagger, AnimatedNumber (tokens in lib/motion.ts)
   lib/             supabase client, generated DB types, format (Kuwait dates), csv, errors,
                    queries, domain/ (attendance, behavior, followups, permissions, reports)
 supabase/
@@ -127,3 +131,6 @@ Never put the service-role key, a secret key, or the database password in any `V
 * The student attendance report returns all matching rows in one response (no server-side pagination); appropriate for a single school.
 * Kuwaiti public holidays are not modelled; only the Friday/Saturday weekend is blocked.
 * User invitations use an admin-set temporary password; email invites/SMTP are not configured.
+* PWA offline support covers the app shell only. Student data from Supabase is deliberately **never cached** by the service worker (shared school devices), so the app needs a connection to read or save records.
+* No web push notifications yet (would need VAPID keys and a server-side sender); the icon badge updates while the app is open.
+* The iOS install flow is manual (Share → Add to Home Screen) because Safari has no install prompt API.

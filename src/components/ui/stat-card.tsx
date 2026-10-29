@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router';
+import { m } from 'motion/react';
+import { riseItem } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './states';
 
@@ -29,12 +31,17 @@ export function StatCard({ label, value, hint, icon, tone = 'brand', to, loading
       {hint && <p className="mt-1 text-xs text-fg-muted">{hint}</p>}
     </>
   );
-  const cls = 'block rounded-lg border border-line bg-surface p-4 shadow-sm';
-  return to ? (
-    <Link to={to} className={cn(cls, 'transition-shadow hover:border-line-strong hover:shadow-md')}>
-      {body}
-    </Link>
-  ) : (
-    <div className={cls}>{body}</div>
+  const cls = 'block h-full rounded-lg border border-line bg-surface p-4 shadow-sm';
+  // riseItem: animates when placed inside a <Stagger> parent.
+  return (
+    <m.div variants={riseItem} whileHover={to ? { y: -2 } : undefined} whileTap={to ? { scale: 0.985 } : undefined} className="h-full">
+      {to ? (
+        <Link to={to} className={cn(cls, 'transition-[box-shadow,border-color] duration-200 hover:border-line-strong hover:shadow-md')}>
+          {body}
+        </Link>
+      ) : (
+        <div className={cls}>{body}</div>
+      )}
+    </m.div>
   );
 }

@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { AlertCircle, Inbox, Loader2, RotateCcw } from 'lucide-react';
+import { m } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { spring } from '@/lib/motion';
 import { errorMessage } from '@/lib/errors';
 import { Button } from './button';
 
@@ -14,7 +16,7 @@ export function Spinner({ className, label = 'جارٍ التحميل' }: { clas
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn('animate-pulse rounded-md bg-surface-hover', className)} />;
+  return <div aria-hidden className={cn('skeleton rounded-md', className)} />;
 }
 
 export function LoadingState({ rows = 5, className }: { rows?: number; className?: string }) {
@@ -37,9 +39,14 @@ export function EmptyState({ icon, title, description, action, className }: {
 }) {
   return (
     <div className={cn('flex flex-col items-center justify-center px-6 py-12 text-center', className)}>
-      <span className="mb-3 grid size-12 place-items-center rounded-full bg-surface-sunken text-fg-subtle [&_svg]:size-6">
+      <m.span
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={spring.pop}
+        className="mb-3 grid size-12 place-items-center rounded-full bg-surface-sunken text-fg-subtle [&_svg]:size-6"
+      >
         {icon ?? <Inbox />}
-      </span>
+      </m.span>
       <p className="font-bold text-fg">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-fg-muted">{description}</p>}
       {action && <div className="mt-4">{action}</div>}

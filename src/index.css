@@ -199,6 +199,8 @@
   --animate-fade-in: fade-in 160ms ease-out;
   --animate-scale-in: scale-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-slide-in: slide-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scale-out: scale-out 120ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  --animate-shimmer: shimmer 1.4s linear infinite;
 }
 
 @keyframes fade-in {
@@ -208,6 +210,14 @@
 @keyframes scale-in {
   from { opacity: 0; transform: translateY(4px) scale(0.98); }
   to { opacity: 1; transform: none; }
+}
+@keyframes scale-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(2px) scale(0.97); }
+}
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
 }
 @keyframes slide-in {
   from { transform: translateX(100%); }
@@ -219,6 +229,13 @@
     font-family: var(--font-sans);
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+    /* Native-app feel: no rubber-band bounce revealing the browser behind */
+    overscroll-behavior-y: none;
+  }
+  /* Remove the 300ms double-tap-zoom delay on interactive controls */
+  a, button, [role='button'], [role='radio'], [role='tab'], input, select, label, summary {
+    touch-action: manipulation;
   }
   body {
     min-height: 100dvh;
@@ -258,6 +275,14 @@
     backdrop-filter: blur(var(--glass-blur)) saturate(140%);
   }
   /* Arch motif echoing the logo's rounded-top mark */
+  /* Shimmering skeleton (replaces plain pulse) */
+  .skeleton {
+    background: linear-gradient(100deg, var(--surface-hover) 30%, var(--surface-sunken) 50%, var(--surface-hover) 70%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
   .arch {
     border-start-start-radius: 999px;
     border-start-end-radius: 999px;
@@ -271,6 +296,12 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Installed app (standalone): hide web-only chrome, keep text unselectable on nav */
+@media (display-mode: standalone) {
+  .web-only { display: none !important; }
+  nav, header { -webkit-user-select: none; user-select: none; }
 }
 
 @media print {

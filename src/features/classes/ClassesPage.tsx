@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { DoorOpen, Plus, School, UserRound, Users } from 'lucide-react';
+import { m } from 'motion/react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { useAcademicYears, useClasses } from '@/lib/queries';
 import { formatNumber } from '@/lib/format';
 import { TRACK_LABELS, useAssignments, useEnrollmentCounts } from './api';
 import { ClassFormDialog } from './ClassFormDialog';
+import { Stagger, StaggerItem } from '@/components/motion/Stagger';
 
 export function ClassesPage() {
   const { can } = useAuth();
@@ -60,15 +62,15 @@ export function ClassesPage() {
               <h2 id={`grade-${grade}`} className="mb-2.5 flex items-center gap-2 text-sm font-bold text-fg-muted">
                 <span className="h-4 w-1 rounded-full bg-leaf" aria-hidden /> الصف {formatNumber(grade)}
               </h2>
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <Stagger as="ul" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {list.map((c) => {
                   const enrolled = counts.data?.get(c.id) ?? 0;
                   const homeroom = assignments.data?.find((a) => a.class_id === c.id && a.is_homeroom);
                   const teachers = new Set(assignments.data?.filter((a) => a.class_id === c.id).map((a) => a.teacher_id)).size;
                   const fill = c.capacity ? Math.min(100, Math.round((enrolled / c.capacity) * 100)) : null;
                   return (
-                    <li key={c.id}>
-                      <Link to={`/classes/${c.id}`} className="group block rounded-lg border border-line bg-surface p-4 shadow-sm transition-shadow hover:border-line-strong hover:shadow-md">
+                    <StaggerItem as="li" key={c.id} whileHover={{ y: -3 }} whileTap={{ scale: 0.985 }}>
+                      <Link to={`/classes/${c.id}`} className="group block rounded-lg border border-line bg-surface p-4 shadow-sm transition-[box-shadow,border-color] duration-200 hover:border-line-strong hover:shadow-md">
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <p className="text-lg font-bold text-fg-strong group-hover:text-brand dark:group-hover:text-link">فصل {c.name}</p>
@@ -81,7 +83,7 @@ export function ClassesPage() {
                         {fill !== null && (
                           <div className="mt-3" aria-label={`الإشغال ${fill}%`}>
                             <div className="h-1.5 overflow-hidden rounded-full bg-surface-sunken">
-                              <div className="h-full rounded-full [background:var(--brand-gradient)]" style={{ width: `${fill}%` }} />
+                              <m.div className="h-full rounded-full [background:var(--brand-gradient)]" initial={{ width: 0 }} animate={{ width: `${fill}%` }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }} />
                             </div>
                             <p className="tabular mt-1 text-2xs text-fg-subtle">{formatNumber(enrolled)} من {formatNumber(c.capacity)} مقعدًا</p>
                           </div>
@@ -91,10 +93,10 @@ export function ClassesPage() {
                           <span className="flex items-center gap-1"><DoorOpen className="size-3.5" aria-hidden /> {formatNumber(teachers)} معلمين</span>
                         </div>
                       </Link>
-                    </li>
+                    </StaggerItem>
                   );
                 })}
-              </ul>
+              </Stagger>
             </section>
           ))}
         </div>

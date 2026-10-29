@@ -12,7 +12,7 @@ export function DropdownMenuContent({ className, align = 'end', ...props }: Reac
         align={align}
         sideOffset={6}
         className={cn(
-          'glass z-50 min-w-48 overflow-hidden rounded-lg border p-1 text-sm shadow-lg data-[state=open]:animate-scale-in',
+          'glass z-50 min-w-48 origin-[var(--radix-dropdown-menu-content-transform-origin)] overflow-hidden rounded-lg border p-1 text-sm shadow-lg data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out',
           className,
         )}
         {...props}

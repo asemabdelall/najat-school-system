@@ -1,5 +1,9 @@
 import * as React from 'react';
+import { m, type HTMLMotionProps } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { rowItem, staggerContainer } from '@/lib/motion';
+
+const rowsReveal = staggerContainer(0.018, 0);
 
 /** Solid (non-glass) data table with sticky header and horizontal scroll. */
 export function Table({ className, caption, ...props }: React.TableHTMLAttributes<HTMLTableElement> & { caption?: string }) {
@@ -15,11 +19,12 @@ export function Table({ className, caption, ...props }: React.TableHTMLAttribute
 export function THead(props: React.HTMLAttributes<HTMLTableSectionElement>) {
   return <thead {...props} className={cn('bg-surface-sunken', props.className)} />;
 }
-export function TBody(props: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody {...props} className={cn('[&_tr:last-child]:border-0', props.className)} />;
+/** Body rows reveal in a quick stagger on mount (and when new rows arrive). */
+export function TBody(props: HTMLMotionProps<'tbody'>) {
+  return <m.tbody variants={rowsReveal} initial="hidden" animate="show" {...props} className={cn('[&_tr:last-child]:border-0', props.className)} />;
 }
-export function Tr({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn('border-b border-line transition-colors', className)} {...props} />;
+export function Tr({ className, ...props }: HTMLMotionProps<'tr'>) {
+  return <m.tr variants={rowItem} className={cn('border-b border-line transition-colors', className)} {...props} />;
 }
 export function Th({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
