@@ -11,6 +11,7 @@ import { RouteErrorBoundary } from '@/features/errors/RouteErrorBoundary';
 const page = <M, K extends keyof M>(loader: () => Promise<M>, name: K) =>
   lazy(async () => ({ default: (await loader())[name] as React.ComponentType }));
 
+const LandingPage = page(() => import('@/features/landing/LandingPage'), 'LandingPage');
 const DashboardPage = page(() => import('@/features/dashboard/DashboardPage'), 'DashboardPage');
 const StudentsPage = page(() => import('@/features/students/StudentsPage'), 'StudentsPage');
 const StudentDetailPage = page(() => import('@/features/students/StudentDetailPage'), 'StudentDetailPage');
@@ -40,6 +41,15 @@ function guarded(permission: Permission, element: ReactNode) {
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorBoundary /> },
+  {
+    path: '/welcome',
+    element: (
+      <Suspense fallback={null}>
+        <LandingPage />
+      </Suspense>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
   {
     element: (
       <RequireAuth>

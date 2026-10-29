@@ -420,8 +420,16 @@ function AnimatedOutlet() {
 }
 
 export function AppShell() {
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [menuOpen, setMenuOpenState] = React.useState(false);
   const location = useLocation();
+  // Navigations commit in a transition, so the router's location can lag
+  // the URL while the next page loads. Remember the URL the drawer was
+  // opened on and only close it when the user actually moves elsewhere.
+  const openedOn = React.useRef('');
+  const setMenuOpen = React.useCallback((open: boolean) => {
+    if (open) openedOn.current = window.location.pathname;
+    setMenuOpenState(open);
+  }, []);
 
   // Generate due-soon follow-up reminders once per session.
   React.useEffect(() => {
@@ -429,7 +437,7 @@ export function AppShell() {
   }, []);
 
   React.useEffect(() => {
-    setMenuOpen(false);
+    if (location.pathname !== openedOn.current) setMenuOpenState(false);
     window.scrollTo({ top: 0 });
   }, [location.pathname]);
 
