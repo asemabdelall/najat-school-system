@@ -66,7 +66,7 @@ export function AttendancePage() {
           actions={
             <>
               <label htmlFor="overview-date" className="sr-only">التاريخ</label>
-              <Input id="overview-date" type="date" className="h-9 w-40" value={date} max={today} onChange={(e) => e.target.value && setParams({ date: e.target.value })} />
+              <div className="w-44"><Input id="overview-date" type="date" className="h-9" value={date} max={today} onChange={(e) => e.target.value && setParams({ date: e.target.value })} /></div>
             </>
           }
         />

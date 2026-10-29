@@ -1,13 +1,26 @@
 import * as React from 'react';
+import { CalendarDays, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const controlClass =
-  'w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-fg shadow-xs transition-colors placeholder:text-fg-subtle hover:border-fg-subtle/60 focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:opacity-70 aria-[invalid=true]:border-danger';
+  'w-full rounded-md border border-line-strong bg-surface px-3 text-base text-fg sm:text-sm shadow-xs transition-colors placeholder:text-fg-subtle hover:border-fg-subtle/60 focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:opacity-70 aria-[invalid=true]:border-danger';
+
+const PICKER_TYPES = new Set(['date', 'time', 'datetime-local', 'month']);
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, type = 'text', ...props }, ref) => (
-    <input ref={ref} type={type} className={cn(controlClass, 'h-10', className)} {...props} />
-  ),
+  ({ className, type = 'text', ...props }, ref) => {
+    if (!PICKER_TYPES.has(type)) return <input ref={ref} type={type} className={cn(controlClass, 'h-10', className)} {...props} />;
+    // Native pickers render differently per platform (iOS Safari ignores
+    // width and centres the value). Normalise them and draw our own icon;
+    // the whole field opens the picker (see .picker-input in index.css).
+    const Icon = type === 'time' ? Clock : CalendarDays;
+    return (
+      <div className="relative w-full min-w-0">
+        <input ref={ref} type={type} className={cn(controlClass, 'picker-input h-10 pe-10 tabular', className)} {...props} />
+        <Icon className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-fg-muted" aria-hidden />
+      </div>
+    );
+  },
 );
 Input.displayName = 'Input';
 

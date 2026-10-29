@@ -7,6 +7,7 @@ import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { App } from './App';
 import { PwaPrompts } from '@/pwa/PwaPrompts';
+import '@/pwa/lockZoom';
 import './index.css';
 
 const queryClient = new QueryClient({

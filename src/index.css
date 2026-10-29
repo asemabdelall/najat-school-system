@@ -237,6 +237,37 @@
   a, button, [role='button'], [role='radio'], [role='tab'], input, select, label, summary {
     touch-action: manipulation;
   }
+  /* Date/time fields: same box on every platform (iOS draws them wider
+     than their container and centres the value). */
+  input.picker-input {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    text-align: start;
+    cursor: pointer;
+  }
+  input.picker-input::-webkit-date-and-time-value {
+    text-align: start;
+    margin: 0;
+    min-height: 1.5em;
+  }
+  input.picker-input::-webkit-datetime-edit {
+    padding: 0;
+  }
+  /* Invisible native indicator stretched over the field: tap anywhere to open */
+  input.picker-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
   body {
     min-height: 100dvh;
     background: var(--canvas);
@@ -300,6 +331,10 @@
 
 /* Installed app (standalone): hide web-only chrome, keep text unselectable on nav */
 @media (display-mode: standalone) {
+  /* Installed app behaves like a native app: no pinch/double-tap zoom */
+  html {
+    touch-action: pan-x pan-y;
+  }
   .web-only { display: none !important; }
   nav, header { -webkit-user-select: none; user-select: none; }
 }
