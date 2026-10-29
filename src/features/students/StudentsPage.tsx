@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { Search, UserPlus, Users, X } from 'lucide-react';
+import { Search, Upload, UserPlus, Users, X } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -67,9 +67,16 @@ export function StudentsPage() {
         description="سجل الطلاب وتسجيلهم في الفصول"
         actions={
           can('students.manage') && (
-            <Button onClick={() => setCreateOpen(true)}>
-              <UserPlus /> إضافة طالب
-            </Button>
+            <>
+              <Button variant="secondary" asChild>
+                <Link to="/students/import">
+                  <Upload /> استيراد من ملف
+                </Link>
+              </Button>
+              <Button onClick={() => setCreateOpen(true)}>
+                <UserPlus /> إضافة طالب
+              </Button>
+            </>
           )
         }
       />

@@ -21,6 +21,8 @@ School management platform for **Al-Najat Boys Secondary School, Hawally (Kuwait
 | Public landing page (`/welcome`) | Shown to signed-out visitors at `/` (the installed app opens straight to sign-in). Arabic, one school day as the scroll (first period → break → afternoon → end of day); a working miniature attendance sheet with the real rules; images and a phone recording are the system itself with fictional data; scroll-linked motion with reduced-motion fallbacks |
 | Installable app (PWA) | Installs to the home screen (Android/desktop prompt, iOS step-by-step guide); standalone full-screen, RTL manifest, maskable icons, iOS splash screens, home-screen shortcuts (take attendance, report incident, follow-ups, students), store screenshots; offline app shell with an offline banner; in-app "new version" card (no surprise reloads); unread count on the app icon badge; safe-area aware |
 | Mobile UX & motion | Bottom tab bar (role-aware) + "More" drawer on phones; dialogs become draggable bottom sheets; animated page transitions, staggered lists/cards, shared-layout nav indicators, count-up KPIs, animated attendance status pills and progress; honours "reduce motion" |
+| Student import | CSV import (UTF-8, comma/semicolon/tab, Arabic digits) with a downloadable template: per-row validation against the database rules, duplicate detection in the file and in the system, class mapping (`10/1`), preview, progress, and a CSV of rows that need fixing |
+| Accounts | Temporary passwords must be replaced at first sign-in; self-service password change; public sign-up blocked in the database |
 | Admin | Users (create via Edge Function, grant/revoke roles, activate/deactivate, reset password), school settings, behaviour categories, immutable audit log viewer |
 
 **Out of scope (by design):** student/parent portals, native app-store apps, SMS/WhatsApp, payments, automatic disciplinary decisions, government-system integrations.
@@ -131,7 +133,9 @@ Never put the service-role key, a secret key, or the database password in any `V
 * Notifications refresh by polling (60 s), not Realtime.
 * The student attendance report returns all matching rows in one response (no server-side pagination); appropriate for a single school.
 * Kuwaiti public holidays are not modelled; only the Friday/Saturday weekend is blocked.
-* User invitations use an admin-set temporary password; email invites/SMTP are not configured.
+* User invitations use an admin-set temporary password (replaced by the user at first sign-in); email invites and "forgot password" emails need SMTP, which is not configured. An admin resets forgotten passwords.
+* Student import reads CSV; an Excel file is saved as "CSV UTF-8" first.
+* No client error monitoring service (e.g. Sentry) is wired in; errors are shown to the user and route errors are caught by an error boundary.
 * PWA offline support covers the app shell only. Student data from Supabase is deliberately **never cached** by the service worker (shared school devices), so the app needs a connection to read or save records.
 * No web push notifications yet (would need VAPID keys and a server-side sender); the icon badge updates while the app is open.
 * The iOS install flow is manual (Share → Add to Home Screen) because Safari has no install prompt API.

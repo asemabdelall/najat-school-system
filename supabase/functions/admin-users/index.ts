@@ -93,7 +93,9 @@ Deno.serve(async (req) => {
       }
       const created = await asService('/auth/v1/admin/users', {
         method: 'POST',
-        body: JSON.stringify({ email, password: body.password, email_confirm: true, user_metadata: { full_name: fullName } }),
+        // app_metadata.staff is what lets the insert past guard_auth_user_insert;
+        // only the service role can set it, so public sign-ups are rejected.
+        body: JSON.stringify({ email, password: body.password, email_confirm: true, user_metadata: { full_name: fullName }, app_metadata: { staff: true } }),
       });
       if (!created.ok || !created.data?.id) {
         const msg = JSON.stringify(created.data ?? '');
@@ -103,7 +105,7 @@ Deno.serve(async (req) => {
       const id: string = created.data.id;
       await asService('/rest/v1/profiles?on_conflict=id', {
         method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
-        body: JSON.stringify({ id, full_name: fullName, email }),
+        body: JSON.stringify({ id, full_name: fullName, email, must_change_password: true }),
       });
       const granted = await asService('/rest/v1/user_roles', {
         method: 'POST', prefer: 'return=minimal',
@@ -154,6 +156,10 @@ Deno.serve(async (req) => {
         method: 'PUT', body: JSON.stringify({ password: body.password }),
       });
       if (!res.ok) return reply(400, { error: 'تعذر تعيين كلمة المرور' });
+      // A password the admin knows is temporary: the user sets their own at next sign-in.
+      await asService(`/rest/v1/profiles?id=eq.${userId}`, {
+        method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ must_change_password: userId !== callerId }),
+      });
       await audit('reset_password', userId, {});
       return reply(200, { ok: true });
     }

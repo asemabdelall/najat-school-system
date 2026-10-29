@@ -14,6 +14,7 @@ const page = <M, K extends keyof M>(loader: () => Promise<M>, name: K) =>
 const LandingPage = page(() => import('@/features/landing/LandingPage'), 'LandingPage');
 const DashboardPage = page(() => import('@/features/dashboard/DashboardPage'), 'DashboardPage');
 const StudentsPage = page(() => import('@/features/students/StudentsPage'), 'StudentsPage');
+const ImportStudentsPage = page(() => import('@/features/students/ImportStudentsPage'), 'ImportStudentsPage');
 const StudentDetailPage = page(() => import('@/features/students/StudentDetailPage'), 'StudentDetailPage');
 const ClassesPage = page(() => import('@/features/classes/ClassesPage'), 'ClassesPage');
 const ClassDetailPage = page(() => import('@/features/classes/ClassDetailPage'), 'ClassDetailPage');
@@ -68,6 +69,7 @@ const router = createBrowserRouter([
             element: <Outlet />,
             children: [
               { index: true, element: guarded('students.view', <StudentsPage />) },
+              { path: 'import', element: guarded('students.manage', <ImportStudentsPage />) },
               { path: ':studentId', element: guarded('students.view', <StudentDetailPage />) },
             ],
           },

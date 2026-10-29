@@ -43,6 +43,15 @@ describe('anonymous access', () => {
     expect(error?.message ?? '').toMatch(/not allowed|disabled/i);
     expect(data.user).toBeNull();
   });
+  it('rejects auth users not created as staff, even through the admin API', async () => {
+    // guard_auth_user_insert: the defence behind a mis-set "allow sign-ups".
+    const svc = serviceClient();
+    const plain = await svc.auth.admin.createUser({ email: `nostaff${Date.now()}@example.com`, password: 'Sup3r-Secret-pass1', email_confirm: true });
+    expect(plain.error).toBeTruthy();
+    const staff = await svc.auth.admin.createUser({ email: `staff${Date.now()}@example.com`, password: 'Sup3r-Secret-pass1', email_confirm: true, app_metadata: { staff: true } });
+    expect(staff.error).toBeNull();
+    await svc.auth.admin.deleteUser(staff.data.user!.id);
+  });
   it('has EXECUTE on no public function (including PUBLIC-inherited grants)', async () => {
     for (const fn of ['save_attendance', 'submit_incident', 'create_student', 'transition_incident', 'review_absence_excuse', 'search_students', 'my_roles']) {
       const { error } = await anonClient().rpc(fn as never, {} as never);

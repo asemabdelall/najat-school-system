@@ -1,0 +1,4 @@
+# Internal school system: only the public introduction page may be indexed.
+User-agent: *
+Allow: /welcome$
+Disallow: /

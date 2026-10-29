@@ -92,7 +92,7 @@ async function ensureUser(s) {
   let user = list.users.find((u) => u.email === s.email);
   if (!user) {
     user = must(
-      await db.auth.admin.createUser({ email: s.email, password, email_confirm: true, user_metadata: { full_name: s.name } }),
+      await db.auth.admin.createUser({ email: s.email, password, email_confirm: true, user_metadata: { full_name: s.name }, app_metadata: { staff: true } }),
       `create ${s.email}`,
     ).user;
   }
@@ -124,10 +124,14 @@ async function main() {
   );
   console.log('✓ teacher assignments');
 
-  // Attendance: the last 15 school days (daily mode), excluding today.
+  // Attendance: the 15 school days before the most recent school day, so
+  // "today" (or, on a weekend, the last school day) is left for the tests
+  // and for trying the workflow by hand.
   const today = kwToday();
+  let open = today;
+  while (!isSchoolDay(open)) open = addDays(open, -1);
   const days = [];
-  for (let d = addDays(today, -1); days.length < 15; d = addDays(d, -1)) if (isSchoolDay(d) && d >= '2026-09-13') days.push(d);
+  for (let d = addDays(open, -1); days.length < 15; d = addDays(d, -1)) if (isSchoolDay(d) && d >= '2026-09-13') days.push(d);
   const takers = { [cls(10, 1)]: 't1', [cls(10, 2)]: 't1', [cls(10, 3)]: 't2', [cls(11, 1)]: 't2', [cls(11, 2)]: 't2', [cls(11, 3)]: 't1', [cls(12, 1)]: 't3', [cls(12, 2)]: 't3', [cls(12, 3)]: 't3' };
   const enrollments = must(await db.from('enrollments').select('id, student_id, class_id').eq('academic_year_id', 'a0000000-0000-4000-8000-000000002026'), 'enrollments');
   const enrollmentOf = new Map(enrollments.map((e) => [`${e.class_id}:${e.student_id}`, e.id]));

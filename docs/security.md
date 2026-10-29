@@ -65,8 +65,17 @@ Deactivating a user has two effects: their roles stop counting immediately, so e
 
 ## Authentication
 
-* Supabase Auth email/password. **Public sign-up is disabled** (`[auth] enable_signup = false`); accounts are created by admins only. Minimum password length is 10.
+* Supabase Auth email/password. **Public sign-up is disabled** (`[auth] enable_signup = false`); accounts are created by admins only. Minimum password length is 10, with letters and digits.
+* **Sign-up is also blocked in the database**, so a mis-set dashboard toggle cannot open the school to self-registration: the deferred constraint trigger `guard_auth_user_insert` rejects any new `auth.users` row whose `app_metadata.staff` is not `true` at commit. Only the service role can set `app_metadata` (the `admin-users` Edge Function and `scripts/seed-dev.mjs` do). Side effect: users added from the Supabase dashboard's "Add user" form are rejected too; add staff from the app's Users page.
+* **Temporary passwords.** Accounts created or reset by an admin get `profiles.must_change_password = true`; after signing in the user sees only the "set your own password" screen until they choose one. The flag cannot be cleared through the API (`guard_profile_update`); `password_changed()` clears it for the caller after the new password is saved. Users can change their own password any time from the account menu (the current password is verified first).
 * Sessions persist in `localStorage` under `najat-auth` with auto-refresh. A rejected or expired token signs the user out locally and shows "انتهت الجلسة". After an explicit sign-out the app never redirects the next user to the previous user's page.
+
+## HTTP security headers (vercel.json)
+
+* `Content-Security-Policy`: `default-src 'self'`; scripts from the app origin only (no inline script, no eval; Zod runs `jitless`); `connect-src` limited to the project's Supabase URL (HTTPS + WSS); `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`. Styles allow `'unsafe-inline'` for component style attributes (animation transforms, chart layout). Verified with zero violations across every screen on a production build.
+* `Strict-Transport-Security` (2 years, preload), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Cross-Origin-Opener-Policy: same-origin`, a restrictive `Permissions-Policy`.
+* `robots.txt` allows only the public `/welcome` page to be indexed.
+* If the Supabase project URL changes, update `connect-src` in `vercel.json`.
 
 ## Privacy
 

@@ -6,6 +6,7 @@ import { Download, PlusSquare, RefreshCw, Share, Smartphone, X } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { spring } from '@/lib/motion';
+import { isStandalone } from './standalone';
 
 // ---------------------------------------------------------------------
 // Install prompt. `beforeinstallprompt` can fire before React mounts, so
@@ -28,12 +29,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export function isStandalone(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    (window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true)
-  );
-}
+export { isStandalone };
 
 function isIosSafari(): boolean {
   const ua = navigator.userAgent;

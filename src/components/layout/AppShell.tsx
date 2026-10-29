@@ -4,7 +4,7 @@ import { Dialog as D } from 'radix-ui';
 import { AnimatePresence, m, useDragControls } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  BarChart3, Bell, CalendarCheck2, Flag, History, LayoutDashboard, ListChecks, LogOut, Menu, Moon, MoreHorizontal, School, Settings,
+  BarChart3, Bell, CalendarCheck2, Flag, History, KeyRound, LayoutDashboard, ListChecks, LogOut, Menu, Moon, MoreHorizontal, School, Settings,
   Sun, UserCog, UserRound, Users, WifiOff, X,
 } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
@@ -22,6 +22,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useInstallPrompt } from '@/pwa/PwaPrompts';
+import { ChangePasswordDialog } from '@/features/auth/ChangePassword';
 import { Logo } from './Logo';
 
 type NavItem = { to: string; label: string; short?: string; icon: React.ElementType; permission: Permission; end?: boolean };
@@ -187,47 +188,54 @@ function UserMenu() {
   const { theme, toggle } = useTheme();
   const install = useInstallPrompt();
   const [busy, setBusy] = React.useState(false);
+  const [pwOpen, setPwOpen] = React.useState(false);
   return (
-    <DropdownMenu dir="rtl">
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-surface-hover" aria-label="قائمة الحساب">
-          <span className="grid size-8 place-items-center rounded-full bg-brand text-sm font-bold text-white">
-            {profile?.full_name.replace(/^أ\.\s*/, '').charAt(0) ?? <UserRound className="size-4" />}
-          </span>
-          <span className="hidden min-w-0 leading-tight md:block">
-            <span className="block max-w-40 truncate text-[0.8125rem] font-bold text-fg">{profile?.full_name}</span>
-            <span className="block text-2xs text-fg-muted">{roles.map((r) => ROLE_LABELS[r]).join('، ')}</span>
-          </span>
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>
-          <span className="block font-bold text-fg">{profile?.full_name}</span>
-          <span className="ltr block text-end">{profile?.email}</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={toggle}>
-          {theme === 'dark' ? <Sun /> : <Moon />}
-          {theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
-        </DropdownMenuItem>
-        {install.available && (
-          <DropdownMenuItem onSelect={() => install.prompt()}>
-            <School /> تثبيت التطبيق على الجهاز
+    <>
+      <ChangePasswordDialog open={pwOpen} onOpenChange={setPwOpen} />
+      <DropdownMenu dir="rtl">
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-2 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-surface-hover" aria-label="قائمة الحساب">
+            <span className="grid size-8 place-items-center rounded-full bg-brand text-sm font-bold text-white">
+              {profile?.full_name.replace(/^أ\.\s*/, '').charAt(0) ?? <UserRound className="size-4" />}
+            </span>
+            <span className="hidden min-w-0 leading-tight md:block">
+              <span className="block max-w-40 truncate text-[0.8125rem] font-bold text-fg">{profile?.full_name}</span>
+              <span className="block text-2xs text-fg-muted">{roles.map((r) => ROLE_LABELS[r]).join('، ')}</span>
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>
+            <span className="block font-bold text-fg">{profile?.full_name}</span>
+            <span className="ltr block text-end">{profile?.email}</span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={toggle}>
+            {theme === 'dark' ? <Sun /> : <Moon />}
+            {theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
           </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-danger [&_svg]:text-danger"
-          disabled={busy}
-          onSelect={async () => {
-            setBusy(true);
-            await signOut();
-          }}
-        >
-          <LogOut /> تسجيل الخروج
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem onSelect={() => setPwOpen(true)}>
+            <KeyRound /> تغيير كلمة المرور
+          </DropdownMenuItem>
+          {install.available && (
+            <DropdownMenuItem onSelect={() => install.prompt()}>
+              <School /> تثبيت التطبيق على الجهاز
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-danger [&_svg]:text-danger"
+            disabled={busy}
+            onSelect={async () => {
+              setBusy(true);
+              await signOut();
+            }}
+          >
+            <LogOut /> تسجيل الخروج
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
 

@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { can as canDo, isManagerRole, ROLES, type Permission, type Role } from '@/lib/domain/permissions';
 
-export type Profile = { id: string; full_name: string; email: string | null; phone: string | null; is_active: boolean };
+export type Profile = { id: string; full_name: string; email: string | null; phone: string | null; is_active: boolean; must_change_password: boolean };
 
 type AuthState = {
   status: 'loading' | 'signed_out' | 'signed_in';
@@ -26,7 +26,7 @@ const AuthContext = React.createContext<AuthState | null>(null);
 
 async function loadIdentity(userId: string) {
   const [profileRes, rolesRes] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, email, phone, is_active').eq('id', userId).maybeSingle(),
+    supabase.from('profiles').select('id, full_name, email, phone, is_active, must_change_password').eq('id', userId).maybeSingle(),
     supabase.rpc('my_roles'),
   ]);
   if (profileRes.error) throw profileRes.error;

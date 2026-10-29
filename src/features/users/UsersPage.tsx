@@ -47,7 +47,7 @@ function CreateUserDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
   const create = useMutation({ mutationFn: () => adminUsers({ action: 'create', ...v }), onSuccess: () => void qc.invalidateQueries({ queryKey: qk.staff }) });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title="إضافة مستخدم" description="يُنشأ الحساب مفعّلًا. سلّم كلمة المرور المؤقتة للموظف عبر قناة آمنة واطلب تغييرها." size="md">
+      <DialogContent title="إضافة مستخدم" description="يُنشأ الحساب مفعّلًا. سلّم كلمة المرور المؤقتة للموظف عبر قناة آمنة؛ سيُطلب منه تعيين كلمة مرور خاصة به عند أول دخول." size="md">
         <form
           className="space-y-4"
           onSubmit={async (e) => {
@@ -191,7 +191,7 @@ export function UsersPage() {
         description={
           pending?.kind === 'password' ? (
             <div className="space-y-2">
-              <p>ستُستبدل كلمة المرور الحالية. سلّم الجديدة للموظف بشكل آمن.</p>
+              <p>ستُستبدل كلمة المرور الحالية بكلمة مؤقتة، وسيُطلب من الموظف تغييرها عند دخوله التالي. سلّمها له بشكل آمن.</p>
               <Input aria-label="كلمة المرور الجديدة" dir="ltr" className="text-start" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="١٠ أحرف على الأقل، حروف وأرقام" />
             </div>
           ) : pending?.kind === 'deactivate' ? 'لن يتمكن الموظف من تسجيل الدخول، وتُوقف صلاحياته فورًا. تبقى سجلاته التاريخية محفوظة.'

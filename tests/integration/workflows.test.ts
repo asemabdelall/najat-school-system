@@ -116,6 +116,20 @@ describe('admin-users edge function', () => {
     const dup = await invokeAdmin(admin, { action: 'create', email, full_name: 'مكرر', password: 'Abcdef12345', roles: ['teacher'] });
     expect(dup.status).toBe(409);
   });
+  it('a new account must replace its temporary password, and cannot skip that', async () => {
+    const c = anonClient();
+    await c.auth.signInWithPassword({ email, password: 'Abcdef12345' });
+    const flag = async () => (await c.from('profiles').select('must_change_password').eq('id', newId).single()).data?.must_change_password;
+    expect(await flag()).toBe(true);
+    // Clearing the flag directly is refused by guard_profile_update.
+    expect((await c.from('profiles').update({ must_change_password: false }).eq('id', newId)).error).toBeTruthy();
+    expect((await c.auth.updateUser({ password: 'NewPassw0rd99' })).error).toBeNull();
+    expect((await c.rpc('password_changed')).error).toBeNull();
+    expect(await flag()).toBe(false);
+    // An admin reset makes it temporary again.
+    expect((await invokeAdmin(admin, { action: 'reset_password', user_id: newId, password: 'Abcdef12345' })).status).toBe(200);
+    expect(await flag()).toBe(true);
+  });
   it('deactivation blocks sign-in and data access', async () => {
     const c = anonClient();
     await c.auth.signInWithPassword({ email, password: 'Abcdef12345' });

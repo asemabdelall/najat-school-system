@@ -90,9 +90,14 @@ The functions in `…05_reporting.sql` are **SECURITY INVOKER**, so RLS filters 
 * The student report returns all rows for the filter, with no server pagination (fine at one school's scale of a few hundred students).
 * Due-soon reminders are generated when the assignee opens the app (`refresh_due_soon_notifications`), not by a background scheduler.
 
+## Account security (migration 008)
+
+* `profiles.must_change_password` (temporary-password gate) and `password_changed()`.
+* `guard_auth_user_insert`: deferred constraint trigger on `auth.users` that only admits staff accounts created by the service role.
+
 ## Indexes
 
-Indexes cover the common filters: enrollments by class/status and student; sessions by date; records by student/status; incidents by status, date, reporter, category; follow-ups by assignee/status and status/due date; notifications by recipient/read/created; audit logs by created, table/record, actor; student name and number.
+Indexes cover the common filters: enrollments by class/status and student; sessions by date; records by student/status; incidents by status, date, reporter, category; follow-ups by assignee/status and status/due date; notifications by recipient/read/created; audit logs by created, table/record, actor; student name and number. Migration 009 adds an index for every foreign key the Supabase advisor flagged and splits "for all" policies so each table has one permissive policy per action.
 
 ## Regenerating types
 
