@@ -72,6 +72,7 @@ export type StudentInput = {
   guardian_name: string | null;
   guardian_phone: string | null;
   notes: string | null;
+  civil_id: string | null;
 };
 
 export function useInvalidateStudents() {
@@ -93,6 +94,7 @@ export function useCreateStudent() {
           p_guardian_phone: sqlNull(v.guardian_phone),
           p_notes: sqlNull(v.notes),
           p_class_id: sqlNull(v.class_id),
+          p_civil_id: sqlNull(v.civil_id),
         }),
       ),
     onSuccess: () => {

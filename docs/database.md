@@ -10,6 +10,7 @@ PostgreSQL (Supabase). All schema lives in versioned migrations under `supabase/
 | `…04_workflows.sql` | Atomic workflow functions (enrol, attendance save/submit/reopen, excuse review, incident lifecycle, reminders) |
 | `…05_reporting.sql` | Dashboard and report aggregations (SECURITY INVOKER) |
 | `…06_student_search.sql` | Arabic-normalised, RLS-scoped student search |
+| `…10_career_quiz.sql` | `students.civil_id`, `career_quiz_results`, public quiz functions, `career_quiz_overview()` report |
 
 `supabase/seed.sql` (fictional reference data) runs **only** on local `db reset`; it is not a migration.
 
@@ -30,7 +31,7 @@ PostgreSQL (Supabase). All schema lives in versioned migrations under `supabase/
 | `user_roles` | `(user_id, role)` with role ∈ admin / student_affairs / teacher | PK on both; guard: no self-demotion of admin, at least one active admin |
 | `academic_years` | Name, dates, status, `is_current` | `ends_on > starts_on`; **exclusion constraint: no overlapping years**; partial unique index → one current year |
 | `school_classes` | Grade 10–12, section, name, track, capacity, room, archived | unique `(year, grade, section)`; `(id, year)` unique for the composite FK |
-| `students` | Number, name, DOB, guardian name/phone, status, notes | **unique `lower(student_number)`**; format checks |
+| `students` | Number, name, civil ID, DOB, guardian name/phone, status, notes | **unique `lower(student_number)`**; civil ID unique and check-digit validated (`is_valid_civil_id`); format checks |
 | `enrollments` | Student placement in a class for a year, with history | **composite FK `(class_id, academic_year_id)` → classes**, so the year always matches the class; **partial unique: one active enrollment per student per year**; `active ⇔ ended_on is null` |
 | `teacher_class_assignments` | Teacher ↔ class (+ subject, homeroom) | unique `(teacher, class, subject)`; partial unique: one homeroom per class; trigger: assignee must hold the teacher role; class not archived |
 | `attendance_sessions` | One class / date / period, `draft` or `submitted` | **unique `(class_id, session_date, period)`**; period 0 = daily, 1..N = class period; `submitted ⇔ submitted_at` |
@@ -44,6 +45,7 @@ PostgreSQL (Supabase). All schema lives in versioned migrations under `supabase/
 | `follow_up_tasks` | Title, student, linked incident, category, priority, status, assignee, due date, outcome | `completed ⇔ completed_at`; assignee must be active |
 | `follow_up_notes` | Progress notes | — |
 | `notifications` | Recipient, type, title, body, internal link, read state | link must be an internal path |
+| `career_quiz_results` | One completed career-interest quiz: student, year, class, average score per category (jsonb), top three | categories checked against `career_categories()`; written only by `quiz_submit_result()`; readable via `can_view_student` |
 | `audit_logs` | Actor, action, table, record, changed fields, reason | **append-only**: update/delete/truncate raise even for service_role |
 
 ## Business rules enforced in the database

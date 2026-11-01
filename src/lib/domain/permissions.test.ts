@@ -11,6 +11,9 @@ describe('role-based action availability', () => {
     expect(can(['teacher'], 'attendance.take')).toBe(true);
     expect(can(['teacher'], 'behavior.report')).toBe(true);
   });
+  it('every role can view career-interest results (the database scopes teachers to their classes)', () => {
+    for (const r of ['admin', 'student_affairs', 'teacher'] as const) expect(can([r], 'career.view'), r).toBe(true);
+  });
   it('student affairs can review but not administer users/settings/audit', () => {
     expect(can(['student_affairs'], 'behavior.review')).toBe(true);
     expect(can(['student_affairs'], 'users.manage')).toBe(false);
@@ -18,7 +21,7 @@ describe('role-based action availability', () => {
     expect(can(['student_affairs'], 'audit.view')).toBe(false);
   });
   it('admins hold every permission', () => {
-    expect(permissionsFor(['admin']).size).toBe(20);
+    expect(permissionsFor(['admin']).size).toBe(21);
   });
   it('combines multiple roles', () => {
     expect(can(['teacher', 'student_affairs'], 'behavior.review')).toBe(true);

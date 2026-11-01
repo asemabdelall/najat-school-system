@@ -29,6 +29,7 @@
 | Follow-ups: edit fields / cancel | ✓ | ✓ | creator only |
 | Follow-ups: change status / outcome | ✓ | ✓ | assignee |
 | Reports and CSV export | school | school | own classes (behaviour tab hidden) |
+| Career-interest results, statistics, Excel export | school | school | students in assigned classes |
 | Notifications | own | own | own |
 | Users and roles (grant / revoke / create / deactivate) | ✓ | — | — |
 | School settings, behaviour categories | ✓ | — | — |
@@ -38,7 +39,7 @@ The UI mirror of this matrix is `src/lib/domain/permissions.ts` (unit-tested); t
 
 ## RLS summary
 
-RLS is **enabled on all 20 public tables**. `anon` has no table privileges and no function `EXECUTE`. `authenticated` has `SELECT` everywhere (filtered by policies) and write privileges only where a policy allows it, with column-level grants where sensible: e.g. `profiles(full_name, phone, is_active)`, `notifications(is_read)`, and incident content columns.
+RLS is **enabled on all 21 public tables**. `anon` has no table privileges and no function `EXECUTE`, except the two career-quiz functions below. `authenticated` has `SELECT` everywhere (filtered by policies) and write privileges only where a policy allows it, with column-level grants where sensible: e.g. `profiles(full_name, phone, is_active)`, `notifications(is_read)`, and incident content columns.
 
 * **No direct writes** for authenticated users on `attendance_sessions`, `attendance_records`, `attendance_corrections`, `incident_students`, `incident_actions`, `audit_logs`; these go through workflow functions only.
 * Helper predicates (`has_role`, `is_manager`, `teaches_class`, `teaches_student`, `can_view_student`) are `SECURITY DEFINER`, `STABLE`, with `search_path = ''`.
@@ -51,6 +52,15 @@ RLS is **enabled on all 20 public tables**. `anon` has no table privileges and n
   * self-removal of the admin role, and removing the last active admin;
   * self-deactivation.
 * `audit_logs` is append-only via triggers that raise on `UPDATE`, `DELETE`, and `TRUNCATE`, including for `service_role`.
+
+## Public career-interest quiz (anon)
+
+The separate quiz site (`alnajat-12-test`) uses this project's anon key. It can call exactly two `SECURITY DEFINER` functions and nothing else:
+
+* `quiz_find_student(civil_id)` returns only the name and class of an **active** student enrolled in the **current** year. It never returns IDs, phone numbers or the civil ID, and cannot list students.
+* `quiz_submit_result(civil_id, scores)` accepts exactly the 10 known categories with averages between 1 and 5, computes the top three **on the server** (the client's ranking is never trusted), and allows one submission per student per two minutes.
+
+Results are read only by staff through `career_quiz_overview()` (SECURITY INVOKER, so RLS scopes it) and the `career_quiz_results` select policy (`can_view_student`). The Supabase advisor flags both anon functions as "public SECURITY DEFINER"; that is intentional.
 
 ## Privileged operations
 
@@ -79,7 +89,7 @@ Deactivating a user has two effects: their roles stop counting immediately, so e
 
 ## Privacy
 
-* Fields are collected only where the workflows need them: no civil ID, nationality, medical, or address fields.
+* Fields are collected only where the workflows need them: no nationality, medical, or address fields. The **civil ID** (`students.civil_id`) is stored because students sign in to the career quiz with it: it is check-digit validated, unique, and **excluded from the audit log**.
 * **Notifications never contain student names or incident descriptions**, only the event type, a category name, and an internal link the recipient's own RLS protects.
 * **The audit log omits sensitive free text** (incident descriptions and decision notes, student notes, excuse details, follow-up descriptions and outcomes).
 * User text is rendered as text, never HTML; there is no `dangerouslySetInnerHTML`.

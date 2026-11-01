@@ -193,6 +193,18 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"career_quiz_results": {
+                  Row: {
+                    "academic_year_id": string,"class_id": string | null,"id": string,"scores": Json,"student_id": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "academic_year_id": string,"class_id"?: string | null,"id"?: string,"scores": Json,"student_id": string,"submitted_at"?: string,"top_1": string,"top_2": string,"top_3": string
+                  }
+                  Update: {
+                    "academic_year_id"?: string,"class_id"?: string | null,"id"?: string,"scores"?: Json,"student_id"?: string,"submitted_at"?: string,"top_1"?: string,"top_2"?: string,"top_3"?: string
+                  }
+                  Relationships: []
                 },"behavior_incidents": {
                   Row: {
                     "category_id": string,"created_at": string,"decision_note": string | null,"description": string,"id": string,"incident_date": string,"location": string | null,"reported_by": string | null,"resolved_at": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"severity": string,"status": string,"updated_at": string
@@ -437,14 +449,14 @@ isOneToOne: false
                   ]
                 },"students": {
                   Row: {
-                    "created_at": string,"date_of_birth": string | null,"full_name": string,"guardian_name": string | null,"guardian_phone": string | null,"id": string,"notes": string | null,"status": string,"student_number": string,"updated_at": string
+                    "civil_id": string | null,"created_at": string,"date_of_birth": string | null,"full_name": string,"guardian_name": string | null,"guardian_phone": string | null,"id": string,"notes": string | null,"status": string,"student_number": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"date_of_birth"?: string | null,"full_name": string,"guardian_name"?: string | null,"guardian_phone"?: string | null,"id"?: string,"notes"?: string | null,"status"?: string,"student_number": string,"updated_at"?: string
+                    "civil_id"?: string | null,"created_at"?: string,"date_of_birth"?: string | null,"full_name": string,"guardian_name"?: string | null,"guardian_phone"?: string | null,"id"?: string,"notes"?: string | null,"status"?: string,"student_number": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"date_of_birth"?: string | null,"full_name"?: string,"guardian_name"?: string | null,"guardian_phone"?: string | null,"id"?: string,"notes"?: string | null,"status"?: string,"student_number"?: string,"updated_at"?: string
+                    "civil_id"?: string | null,"created_at"?: string,"date_of_birth"?: string | null,"full_name"?: string,"guardian_name"?: string | null,"guardian_phone"?: string | null,"id"?: string,"notes"?: string | null,"status"?: string,"student_number"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -539,8 +551,29 @@ isOneToOne: false
               "enrollment_id": string,"full_name": string,"student_id": string,"student_number": string
             }[]
                            },
+"career_categories":
+{ Args: Record<PropertyKey, never>; Returns: string[]
+                           },
+"career_quiz_overview":
+{ Args: { "p_class_id"?: string }; Returns: {
+              "attempts": number,"class_id": string,"class_name": string,"full_name": string,"grade_level": number,"scores": Json,"section": string,"student_id": string,"student_number": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string
+            }[]
+                           },
 "create_student":
-{ Args: { "p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string }; Returns: string
+{ Args: { "p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string } | { "p_civil_id": string,"p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string }; Returns: string
+                           },
+"is_valid_civil_id":
+{ Args: { "p": string }; Returns: boolean
+                           },
+"quiz_find_student":
+{ Args: { "p_civil_id": string }; Returns: {
+              "class_name": string,"full_name": string,"grade_level": number,"section": string
+            }[]
+                           },
+"quiz_submit_result":
+{ Args: { "p_civil_id": string,"p_scores": Json }; Returns: {
+              "top_1": string,"top_2": string,"top_3": string
+            }[]
                            },
 "current_academic_year_id":
 { Args: Record<PropertyKey, never>; Returns: string

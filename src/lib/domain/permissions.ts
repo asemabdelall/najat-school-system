@@ -30,6 +30,7 @@ export type Permission =
   | 'followups.view'
   | 'followups.manage'
   | 'reports.view'
+  | 'career.view'
   | 'notifications.view'
   | 'users.manage'
   | 'settings.manage'
@@ -39,17 +40,17 @@ const MATRIX: Record<Role, readonly Permission[]> = {
   admin: [
     'dashboard.view', 'students.view', 'students.manage', 'classes.view', 'classes.manage', 'academic_years.manage',
     'attendance.take', 'attendance.oversee', 'excuses.submit', 'excuses.review', 'behavior.report', 'behavior.review',
-    'behavior.view_all', 'followups.view', 'followups.manage', 'reports.view', 'notifications.view', 'users.manage',
+    'behavior.view_all', 'followups.view', 'followups.manage', 'reports.view', 'career.view', 'notifications.view', 'users.manage',
     'settings.manage', 'audit.view',
   ],
   student_affairs: [
     'dashboard.view', 'students.view', 'students.manage', 'classes.view', 'classes.manage', 'attendance.take',
     'attendance.oversee', 'excuses.submit', 'excuses.review', 'behavior.report', 'behavior.review', 'behavior.view_all',
-    'followups.view', 'followups.manage', 'reports.view', 'notifications.view',
+    'followups.view', 'followups.manage', 'reports.view', 'career.view', 'notifications.view',
   ],
   teacher: [
     'dashboard.view', 'students.view', 'classes.view', 'attendance.take', 'excuses.submit', 'behavior.report',
-    'followups.view', 'reports.view', 'notifications.view',
+    'followups.view', 'reports.view', 'career.view', 'notifications.view',
   ],
 };
 
