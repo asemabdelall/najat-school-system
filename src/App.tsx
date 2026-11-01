@@ -28,6 +28,7 @@ const FollowUpsPage = page(() => import('@/features/followups/FollowUpsPage'), '
 const FollowUpDetailPage = page(() => import('@/features/followups/FollowUpDetailPage'), 'FollowUpDetailPage');
 const NotificationsPage = page(() => import('@/features/notifications/NotificationsPage'), 'NotificationsPage');
 const ReportsPage = page(() => import('@/features/reports/ReportsPage'), 'ReportsPage');
+const CareerPage = page(() => import('@/features/career/CareerPage'), 'CareerPage');
 const UsersPage = page(() => import('@/features/users/UsersPage'), 'UsersPage');
 const SettingsPage = page(() => import('@/features/settings/SettingsPage'), 'SettingsPage');
 const AuditLogPage = page(() => import('@/features/audit/AuditLogPage'), 'AuditLogPage');
@@ -109,6 +110,7 @@ const router = createBrowserRouter([
           },
           { path: 'notifications', handle: { section: 'الإشعارات' }, element: guarded('notifications.view', <NotificationsPage />) },
           { path: 'reports', handle: { section: 'التقارير' }, element: guarded('reports.view', <ReportsPage />) },
+          { path: 'career', handle: { section: 'الميول المهنية' }, element: guarded('career.view', <CareerPage />) },
           { path: 'users', handle: { section: 'المستخدمون والصلاحيات' }, element: guarded('users.manage', <UsersPage />) },
           { path: 'settings', handle: { section: 'الإعدادات' }, element: guarded('settings.manage', <SettingsPage />) },
           { path: 'audit', handle: { section: 'سجل التدقيق' }, element: guarded('audit.view', <AuditLogPage />) },

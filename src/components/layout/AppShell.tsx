@@ -4,7 +4,7 @@ import { Dialog as D } from 'radix-ui';
 import { AnimatePresence, m, useDragControls } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  BarChart3, Bell, CalendarCheck2, Flag, History, KeyRound, LayoutDashboard, ListChecks, LogOut, Menu, Moon, MoreHorizontal, School, Settings,
+  BarChart3, Bell, CalendarCheck2, Compass, Flag, History, KeyRound, LayoutDashboard, ListChecks, LogOut, Menu, Moon, MoreHorizontal, School, Settings,
   Sun, UserCog, UserRound, Users, WifiOff, X,
 } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
@@ -44,6 +44,7 @@ export const NAV: NavGroup[] = [
     label: 'التحليل والتواصل',
     items: [
       { to: '/reports', label: 'التقارير', icon: BarChart3, permission: 'reports.view' },
+      { to: '/career', label: 'الميول المهنية', short: 'الميول', icon: Compass, permission: 'career.view' },
       { to: '/notifications', label: 'الإشعارات', icon: Bell, permission: 'notifications.view' },
     ],
   },

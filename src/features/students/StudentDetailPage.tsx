@@ -252,6 +252,7 @@ export function StudentDetailPage() {
             <dl className="px-5 py-2">
               <InfoRow label="الاسم الكامل">{s.full_name}</InfoRow>
               <InfoRow label="الرقم الطلابي"><span className="ltr tabular">{s.student_number}</span></InfoRow>
+              <InfoRow label="الرقم المدني"><span className="ltr tabular">{s.civil_id ?? '—'}</span></InfoRow>
               <InfoRow label="تاريخ الميلاد">{formatDate(s.date_of_birth)}</InfoRow>
               {isManager && (
                 <>

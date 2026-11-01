@@ -8,6 +8,7 @@ import { Input, Select, Textarea } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { errorMessage } from '@/lib/errors';
 import { blankToNull } from '@/lib/utils';
+import { normalizeCivilId } from '@/lib/domain/civilId';
 import { useClasses, useCurrentYear } from '@/lib/queries';
 import type { Tables } from '@/lib/database.types';
 import { studentSchema, type StudentFormValues } from './schema';
@@ -30,6 +31,7 @@ export function StudentFormDialog({ open, onOpenChange, student, onCreated }: Pr
     () => ({
       student_number: student?.student_number ?? '',
       full_name: student?.full_name ?? '',
+      civil_id: student?.civil_id ?? '',
       date_of_birth: student?.date_of_birth ?? '',
       guardian_name: student?.guardian_name ?? '',
       guardian_phone: student?.guardian_phone ?? '',
@@ -58,6 +60,7 @@ export function StudentFormDialog({ open, onOpenChange, student, onCreated }: Pr
       guardian_name: blankToNull(v.guardian_name),
       guardian_phone: blankToNull(v.guardian_phone),
       notes: blankToNull(v.notes),
+      civil_id: blankToNull(normalizeCivilId(v.civil_id)),
     };
     try {
       if (editing) {
@@ -72,7 +75,8 @@ export function StudentFormDialog({ open, onOpenChange, student, onCreated }: Pr
       onOpenChange(false);
     } catch (e) {
       const msg = errorMessage(e);
-      if (/الرقم الطلابي|مكررة/.test(msg)) form.setError('student_number', { message: 'الرقم الطلابي مستخدم لطالب آخر' });
+      if (/الرقم المدني/.test(msg) || (/مكررة/.test(msg) && /civil_id/.test(JSON.stringify(e)))) form.setError('civil_id', { message: 'الرقم المدني مسجل لطالب آخر أو غير صحيح' });
+      else if (/الرقم الطلابي|مكررة/.test(msg)) form.setError('student_number', { message: 'الرقم الطلابي مستخدم لطالب آخر' });
       else toast.error(msg);
     }
   });
@@ -87,6 +91,9 @@ export function StudentFormDialog({ open, onOpenChange, student, onCreated }: Pr
             </Field>
             <Field label="الرقم الطلابي" htmlFor="student_number" required error={errors.student_number?.message} hint="مثال: NJ-2027-0101">
               <Input dir="ltr" className="text-start" autoComplete="off" {...form.register('student_number')} />
+            </Field>
+            <Field label="الرقم المدني" htmlFor="civil_id" error={errors.civil_id?.message} hint="١٢ رقمًا. يُستخدم لدخول الطالب إلى اختبار الميول المهنية.">
+              <Input dir="ltr" inputMode="numeric" className="text-start" autoComplete="off" {...form.register('civil_id')} />
             </Field>
             <Field label="تاريخ الميلاد" htmlFor="date_of_birth" error={errors.date_of_birth?.message}>
               <Input type="date" {...form.register('date_of_birth')} />

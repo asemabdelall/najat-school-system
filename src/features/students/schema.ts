@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidCivilId, normalizeCivilId } from '@/lib/domain/civilId';
 
 const phone = /^\+?[0-9 ]{7,20}$/;
 
@@ -9,6 +10,10 @@ export const studentSchema = z.object({
     .min(3, 'الرقم الطلابي يجب ألا يقل عن ٣ خانات')
     .max(20, 'الرقم الطلابي طويل جدًا')
     .regex(/^[A-Za-z0-9-]+$/, 'يُسمح بالأحرف اللاتينية والأرقام والشرطة فقط'),
+  civil_id: z
+    .string()
+    .trim()
+    .refine((v) => v === '' || isValidCivilId(normalizeCivilId(v)), 'الرقم المدني غير صحيح (١٢ رقمًا)'),
   full_name: z.string().trim().min(3, 'اسم الطالب مطلوب (٣ أحرف على الأقل)').max(120, 'الاسم طويل جدًا'),
   date_of_birth: z
     .string()
