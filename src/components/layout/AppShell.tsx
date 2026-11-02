@@ -248,7 +248,7 @@ function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { signOut } = useAuth();
   const { theme, toggle } = useTheme();
   return (
-    <header className="glass no-print pt-safe sticky top-0 z-30 border-b">
+    <header className="glass no-print pt-safe sticky top-0 z-30 border-b max-sm:border-line max-sm:bg-surface max-sm:[-webkit-backdrop-filter:none] max-sm:[backdrop-filter:none]">
       <div className="flex h-16 items-center gap-2 px-3 sm:px-6">
         <Button variant="ghost" size="icon" className="hidden sm:inline-flex lg:hidden" onClick={onOpenMenu} aria-label="فتح القائمة">
           <Menu className="size-5" />
@@ -299,7 +299,7 @@ function BottomTabs({ onMore, moreOpen }: { onMore: () => void; moreOpen: boolea
     .sort((a, b) => TAB_PRIORITY.indexOf(a.to) - TAB_PRIORITY.indexOf(b.to))
     .slice(0, 4);
   return (
-    <nav aria-label="التنقل السريع" className="glass no-print pb-safe fixed inset-x-0 bottom-0 z-30 border-t sm:hidden">
+    <nav aria-label="التنقل السريع" className="glass no-print pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface [-webkit-backdrop-filter:none] [backdrop-filter:none] sm:hidden">
       <ul className="grid grid-cols-5">
         {items.map((item) => (
           <li key={item.to}>

@@ -46,43 +46,18 @@ export function scoreOf(row: CareerRow, key: CareerCategory): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
-export type CategoryStat = { key: CareerCategory; label: string; first: number; inTop3: number; average: number | null };
+/** One row of career_quiz_students(): a page of the student list. */
+export type CareerListRow = Omit<CareerRow, 'scores'> & { total_count: number };
 
-export type CareerStats = {
-  total: number;
-  tested: number;
-  notTested: number;
-  /** Percentage 0–100 with one decimal, null when there are no students. */
-  completion: number | null;
-  /** Sorted by first-choice count, then top-3 count, then fixed order. */
-  categories: CategoryStat[];
+export type CategoryStat = {
+  key: CareerCategory;
+  label: string;
+  first: number;
+  inTop3: number;
+  average: number | null;
+  /** Share of tested students whose first choice is this category (0–100, one decimal). */
+  share: number | null;
 };
-
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
-export function careerStats(rows: readonly CareerRow[]): CareerStats {
-  const tested = rows.filter((r) => r.top_1);
-  const categories = CAREER_CATEGORIES.map((key, order) => {
-    const scores = tested.map((r) => scoreOf(r, key)).filter((v): v is number => v !== null);
-    return {
-      key,
-      label: CAREER_LABELS[key],
-      first: tested.filter((r) => r.top_1 === key).length,
-      inTop3: tested.filter((r) => r.top_1 === key || r.top_2 === key || r.top_3 === key).length,
-      average: scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) / 100 : null,
-      order,
-    };
-  })
-    .sort((a, b) => b.first - a.first || b.inTop3 - a.inTop3 || a.order - b.order)
-    .map(({ order: _order, ...rest }) => rest);
-  return {
-    total: rows.length,
-    tested: tested.length,
-    notTested: rows.length - tested.length,
-    completion: rows.length ? round1((100 * tested.length) / rows.length) : null,
-    categories,
-  };
-}
 
 export type ClassCareerStat = {
   class_id: string;
@@ -90,33 +65,50 @@ export type ClassCareerStat = {
   total: number;
   tested: number;
   completion: number | null;
-  /** Most common first choice in the class; ties → fixed category order. */
   leading: CareerCategory | null;
   leadingCount: number;
 };
 
-export function classBreakdown(rows: readonly CareerRow[]): ClassCareerStat[] {
-  const byClass = new Map<string, CareerRow[]>();
-  for (const r of rows) byClass.set(r.class_id, [...(byClass.get(r.class_id) ?? []), r]);
-  return [...byClass.values()].map((list) => {
-    const tested = list.filter((r) => r.top_1);
-    let leading: CareerCategory | null = null;
-    let leadingCount = 0;
-    for (const key of CAREER_CATEGORIES) {
-      const n = tested.filter((r) => r.top_1 === key).length;
-      if (n > leadingCount) {
-        leading = key;
-        leadingCount = n;
-      }
-    }
+export type CareerStats = {
+  total: number;
+  tested: number;
+  notTested: number;
+  completion: number | null;
+  /** Ordered by the server: first choice, then top-3 appearances, then fixed order. */
+  categories: CategoryStat[];
+  classes: ClassCareerStat[];
+};
+
+const round1 = (n: number) => Math.round(n * 10) / 10;
+const pct = (part: number, whole: number) => (whole ? round1((100 * part) / whole) : null);
+const toNum = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
+const isCategory = (v: unknown): v is CareerCategory => typeof v === 'string' && (CAREER_CATEGORIES as readonly string[]).includes(v);
+const arr = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? v.filter((x) => x && typeof x === 'object') : []);
+
+/** Parses career_quiz_stats() (jsonb) into display-ready numbers; tolerant of nulls/strings. */
+export function parseCareerStats(raw: unknown): CareerStats {
+  const o = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const total = toNum(o.total) ?? 0;
+  const tested = toNum(o.tested) ?? 0;
+  const categories = arr(o.categories)
+    .filter((c) => isCategory(c.key))
+    .map((c) => {
+      const key = c.key as CareerCategory;
+      const first = toNum(c.first) ?? 0;
+      return { key, label: CAREER_LABELS[key], first, inTop3: toNum(c.in_top3) ?? 0, average: toNum(c.average), share: pct(first, tested) };
+    });
+  const classes = arr(o.classes).map((c) => {
+    const t = toNum(c.total) ?? 0;
+    const done = toNum(c.tested) ?? 0;
     return {
-      class_id: list[0].class_id,
-      class_name: list[0].class_name,
-      total: list.length,
-      tested: tested.length,
-      completion: list.length ? round1((100 * tested.length) / list.length) : null,
-      leading,
-      leadingCount,
+      class_id: String(c.class_id ?? ''),
+      class_name: String(c.class_name ?? ''),
+      total: t,
+      tested: done,
+      completion: pct(done, t),
+      leading: isCategory(c.leading) ? c.leading : null,
+      leadingCount: toNum(c.leading_count) ?? 0,
     };
   });
+  return { total, tested, notTested: total - tested, completion: pct(tested, total), categories, classes };
 }
