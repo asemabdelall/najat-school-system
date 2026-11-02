@@ -559,6 +559,14 @@ isOneToOne: false
               "attempts": number,"class_id": string,"class_name": string,"full_name": string,"grade_level": number,"scores": Json,"section": string,"student_id": string,"student_number": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string
             }[]
                            },
+"career_quiz_stats":
+{ Args: { "p_class_id"?: string }; Returns: Json
+                           },
+"career_quiz_students":
+{ Args: { "p_class_id"?: string,"p_limit"?: number,"p_offset"?: number,"p_search"?: string,"p_status"?: string }; Returns: {
+              "attempts": number,"class_id": string,"class_name": string,"full_name": string,"student_id": string,"student_number": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string,"total_count": number
+            }[]
+                           },
 "create_student":
 { Args: { "p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string } | { "p_civil_id": string,"p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string }; Returns: string
                            },

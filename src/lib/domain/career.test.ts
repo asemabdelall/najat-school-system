@@ -1,63 +1,52 @@
 import { describe, expect, it } from 'vitest';
-import { careerLabel, careerStats, classBreakdown, type CareerRow } from './career';
+import { careerLabel, parseCareerStats, scoreOf, type CareerRow } from './career';
 
-const row = (id: string, cls: string, top?: [string, string, string], scores?: Record<string, number>): CareerRow => ({
-  student_id: id,
-  student_number: id,
-  full_name: `طالب ${id}`,
-  class_id: cls,
-  class_name: `12/${cls}`,
-  top_1: top?.[0] ?? null,
-  top_2: top?.[1] ?? null,
-  top_3: top?.[2] ?? null,
-  scores: scores ?? null,
-  submitted_at: top ? '2026-11-01T08:00:00Z' : null,
-  attempts: top ? 1 : 0,
-});
+describe('parseCareerStats', () => {
+  const raw = {
+    total: 5,
+    tested: 3,
+    categories: [
+      { key: 'technology', first: 2, in_top3: 3, average: '4.17' },
+      { key: 'sports', first: 1, in_top3: 2, average: 4 },
+      { key: 'outdoor', first: 0, in_top3: 0, average: null },
+      { key: 'not-a-category', first: 9, in_top3: 9, average: 1 },
+    ],
+    classes: [
+      { class_id: 'c1', class_name: '12/1', total: 3, tested: 2, leading: 'technology', leading_count: 2 },
+      { class_id: 'c2', class_name: '12/2', total: 2, tested: 0, leading: null, leading_count: 0 },
+    ],
+  };
 
-const rows = [
-  row('a', '1', ['technology', 'scientific', 'computational'], { technology: 5, scientific: 4, sports: 2 }),
-  row('b', '1', ['technology', 'sports', 'artistic'], { technology: 4, sports: 3 }),
-  row('c', '1'),
-  row('d', '2', ['sports', 'technology', 'literary'], { technology: 3.5, sports: 5 }),
-  row('e', '2'),
-];
-
-describe('careerStats', () => {
-  it('counts tested students and completion over everyone in scope', () => {
-    const s = careerStats(rows);
+  it('derives completion and per-category share of tested students', () => {
+    const s = parseCareerStats(raw);
     expect(s).toMatchObject({ total: 5, tested: 3, notTested: 2, completion: 60 });
+    expect(s.categories[0]).toEqual({ key: 'technology', label: 'التكنولوجي', first: 2, inTop3: 3, average: 4.17, share: 66.7 });
+    expect(s.categories.find((c) => c.key === 'outdoor')).toMatchObject({ average: null, share: 0 });
   });
-  it('ranks categories by first choice, then by top-3 appearances', () => {
-    const s = careerStats(rows);
-    expect(s.categories[0]).toMatchObject({ key: 'technology', first: 2, inTop3: 3 });
-    expect(s.categories[1]).toMatchObject({ key: 'sports', first: 1, inTop3: 2 });
-    expect(s.categories).toHaveLength(10);
+  it('drops unknown categories and keeps the server order', () => {
+    expect(parseCareerStats(raw).categories.map((c) => c.key)).toEqual(['technology', 'sports', 'outdoor']);
   });
-  it('averages only scores that exist; untested students never count', () => {
-    const s = careerStats(rows);
-    expect(s.categories.find((c) => c.key === 'technology')!.average).toBe(4.17);
-    expect(s.categories.find((c) => c.key === 'outdoor')!.average).toBeNull();
+  it('computes class completion and tolerates a class nobody tested yet', () => {
+    const [a, b] = parseCareerStats(raw).classes;
+    expect(a).toMatchObject({ class_name: '12/1', completion: 66.7, leading: 'technology', leadingCount: 2 });
+    expect(b).toMatchObject({ class_name: '12/2', completion: 0, leading: null });
   });
-  it('handles an empty scope', () => {
-    expect(careerStats([])).toMatchObject({ total: 0, tested: 0, completion: null });
-  });
-});
-
-describe('classBreakdown', () => {
-  it('reports completion and the leading first choice per class', () => {
-    const b = classBreakdown(rows);
-    expect(b).toEqual([
-      expect.objectContaining({ class_id: '1', total: 3, tested: 2, leading: 'technology', leadingCount: 2 }),
-      expect.objectContaining({ class_id: '2', total: 2, tested: 1, completion: 50, leading: 'sports' }),
-    ]);
+  it('handles an empty or malformed response', () => {
+    expect(parseCareerStats(null)).toMatchObject({ total: 0, tested: 0, completion: null, categories: [], classes: [] });
+    expect(parseCareerStats({ total: 0, tested: 0 }).completion).toBeNull();
   });
 });
 
-describe('careerLabel', () => {
-  it('returns Arabic labels and a dash for unknown keys', () => {
+describe('helpers', () => {
+  it('labels categories in Arabic and shows a dash for unknown keys', () => {
     expect(careerLabel('social_service')).toBe('الخدمة الاجتماعية');
     expect(careerLabel(null)).toBe('—');
     expect(careerLabel('nope')).toBe('—');
+  });
+  it('reads a numeric score and ignores anything else', () => {
+    const row = { scores: { technology: 4.5, sports: '3' } } as unknown as CareerRow;
+    expect(scoreOf(row, 'technology')).toBe(4.5);
+    expect(scoreOf(row, 'sports')).toBeNull();
+    expect(scoreOf(row, 'outdoor')).toBeNull();
   });
 });
