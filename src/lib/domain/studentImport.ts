@@ -22,6 +22,8 @@ export type ImportRow = {
   classId: string | null;
   className: string | null;
   errors: string[];
+  /** Already in the system from a previous year (archived at year-end): re-activated and enrolled. */
+  returning?: boolean;
 };
 
 const ARABIC_DIGITS = /[٠-٩۰-۹]/g;
@@ -56,7 +58,11 @@ export function parseDate(raw: string): string | null {
   return dt.toISOString().slice(0, 10);
 }
 
-export function validateImport(rows: string[][], map: Partial<Record<ImportField, number>>, classes: ImportClass[], existingNumbers: Set<string>): ImportRow[] {
+/**
+ * existing: student number (lower-case) → current status. Archived students
+ * (closed at a previous year-end) are accepted as returning students.
+ */
+export function validateImport(rows: string[][], map: Partial<Record<ImportField, number>>, classes: ImportClass[], existing: Map<string, string>): ImportRow[] {
   const byKey = new Map<string, ImportClass>();
   for (const c of classes) {
     byKey.set(classKey(`${c.grade_level}/${c.section}`), c);
@@ -71,14 +77,18 @@ export function validateImport(rows: string[][], map: Partial<Record<ImportField
     values.guardian_phone = latinDigits(values.guardian_phone);
     const errors: string[] = [];
     const line = i + 2; // header is line 1
+    let returning = false;
 
     if (!values.student_number) errors.push('الرقم الطلابي مطلوب');
     else if (!/^[A-Za-z0-9-]{3,20}$/.test(values.student_number)) errors.push('الرقم الطلابي: ٣–٢٠ حرفًا إنجليزيًا أو رقمًا أو شرطة');
     else {
       const key = values.student_number.toLowerCase();
-      if (existingNumbers.has(key)) errors.push('الرقم الطلابي مسجل مسبقًا في النظام');
-      else if (seen.has(key)) errors.push(`الرقم الطلابي مكرر في الملف (السطر ${seen.get(key)})`);
-      else seen.set(key, line);
+      const status = existing.get(key);
+      if (seen.has(key)) errors.push(`الرقم الطلابي مكرر في الملف (السطر ${seen.get(key)})`);
+      else if (status === 'archived') returning = true;
+      else if (status === 'graduated') errors.push('الطالب متخرج في عام سابق');
+      else if (status) errors.push('الرقم الطلابي مسجل مسبقًا في النظام');
+      if (!seen.has(key)) seen.set(key, line);
     }
     const nameLen = values.full_name.length;
     if (!nameLen) errors.push('اسم الطالب مطلوب');
@@ -101,6 +111,7 @@ export function validateImport(rows: string[][], map: Partial<Record<ImportField
       cls = byKey.get(classKey(values.class));
       if (!cls) errors.push(`الفصل «${values.class}» غير موجود في العام الدراسي الحالي`);
     }
-    return { line, values, classId: cls?.id ?? null, className: cls?.name ?? null, errors };
+    if (returning && !cls) errors.push('طالب من عام سابق: حدّد فصله في العام الحالي لإعادة تسجيله');
+    return { line, values, classId: cls?.id ?? null, className: cls?.name ?? null, errors, returning };
   });
 }

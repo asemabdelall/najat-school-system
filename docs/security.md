@@ -30,6 +30,9 @@
 | Follow-ups: change status / outcome | ✓ | ✓ | assignee |
 | Reports and CSV export | school | school | own classes (behaviour tab hidden) |
 | Career-interest results, statistics, Excel export | school | school | students in assigned classes |
+| Discipline (summons, suspensions, pledges) | ✓ | ✓ | — |
+| Archive of closed years | ✓ | ✓ | — |
+| Close the academic year | ✓ | — | — |
 | Notifications | own | own | own |
 | Users and roles (grant / revoke / create / deactivate) | ✓ | — | — |
 | School settings, behaviour categories | ✓ | — | — |
@@ -39,7 +42,7 @@ The UI mirror of this matrix is `src/lib/domain/permissions.ts` (unit-tested); t
 
 ## RLS summary
 
-RLS is **enabled on all 21 public tables**. `anon` has no table privileges and no function `EXECUTE`, except the two career-quiz functions below. `authenticated` has `SELECT` everywhere (filtered by policies) and write privileges only where a policy allows it, with column-level grants where sensible: e.g. `profiles(full_name, phone, is_active)`, `notifications(is_read)`, and incident content columns.
+RLS is **enabled on all 22 public tables**. `anon` has no table privileges and no function `EXECUTE`, except the two career-quiz functions below. `authenticated` has `SELECT` everywhere (filtered by policies) and write privileges only where a policy allows it, with column-level grants where sensible: e.g. `profiles(full_name, phone, is_active)`, `notifications(is_read)`, and incident content columns.
 
 * **No direct writes** for authenticated users on `attendance_sessions`, `attendance_records`, `attendance_corrections`, `incident_students`, `incident_actions`, `audit_logs`; these go through workflow functions only.
 * Helper predicates (`has_role`, `is_manager`, `teaches_class`, `teaches_student`, `can_view_student`) are `SECURITY DEFINER`, `STABLE`, with `search_path = ''`.

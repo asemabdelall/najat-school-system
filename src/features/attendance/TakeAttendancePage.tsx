@@ -3,13 +3,12 @@ import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { m } from 'motion/react';
 import { spring } from '@/lib/motion';
-import { AlertTriangle, CalendarX2, Check, CheckCheck, Clock, FileCheck2, History, Lock, RotateCcw, Save, Send, Unlock, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CalendarX2, Check, CheckCheck, Clock, Copy, FileCheck2, History, Lock, RotateCcw, Save, Send, Unlock, X } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Input, Select } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/input';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/states';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { UnsavedChangesDialog } from '@/components/ui/unsaved-changes-dialog';
@@ -23,7 +22,8 @@ import {
   ATTENDANCE_LABELS, ATTENDANCE_STATUSES, countMarks, periodLabel, sessionCompletion, sessionPeriod,
   type AttendanceMode, type AttendanceStatus,
 } from '@/lib/domain/attendance';
-import { useReopenSession, useRoster, useSaveAttendance, useSession, type MarkEntry } from './api';
+import { useReopenSession, useRoster, useSaveAttendance, useSession, useSessionsForDate, type MarkEntry } from './api';
+import { CompletionLegend, PeriodStrip } from './PeriodStrip';
 
 const STATUS_STYLE: Record<AttendanceStatus, { icon: React.ElementType; on: string }> = {
   present: { icon: Check, on: 'border-success bg-success text-white dark:text-slate-950' },
@@ -35,7 +35,7 @@ const STATUS_STYLE: Record<AttendanceStatus, { icon: React.ElementType; on: stri
 /** Radio-group of the four statuses for one student; the highlight glides to the chosen status. */
 function StatusPicker({ id, name, value, disabled, onChange }: { id: string; name: string; value: AttendanceStatus | null; disabled: boolean; onChange: (s: AttendanceStatus) => void }) {
   return (
-    <div role="radiogroup" aria-label={`حالة ${name}`} className="inline-flex flex-wrap gap-1">
+    <div role="radiogroup" aria-label={`حالة ${name}`} className="inline-flex w-full gap-1 rounded-xl bg-surface-sunken p-1 sm:w-auto">
       {ATTENDANCE_STATUSES.map((s) => {
         const Icon = STATUS_STYLE[s].icon;
         const checked = value === s;
@@ -49,12 +49,12 @@ function StatusPicker({ id, name, value, disabled, onChange }: { id: string; nam
             onClick={() => onChange(s)}
             whileTap={disabled ? undefined : { scale: 0.94 }}
             className={cn(
-              'relative inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60',
-              checked ? 'border-transparent text-white dark:text-slate-950' : 'border-line-strong bg-surface text-fg-muted hover:bg-surface-hover hover:text-fg',
+              'relative inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none',
+              checked ? 'text-white dark:text-slate-950' : 'text-fg-muted hover:bg-surface hover:text-fg',
             )}
           >
             {checked && (
-              <m.span layoutId={`att-${id}`} transition={spring.indicator} className={cn('absolute inset-0 rounded-md', STATUS_STYLE[s].on)} aria-hidden />
+              <m.span layoutId={`att-${id}`} transition={spring.indicator} className={cn('absolute inset-0 rounded-lg shadow-sm', STATUS_STYLE[s].on)} aria-hidden />
             )}
             <Icon className="relative size-3.5" aria-hidden />
             <span className="relative">{ATTENDANCE_LABELS[s]}</span>
@@ -82,12 +82,16 @@ export function TakeAttendancePage() {
 
   const roster = useRoster(classId, date);
   const sessionQ = useSession(classId, date, period);
+  const daySessions = useSessionsForDate(date);
+  const periods = mode === 'daily' ? [0] : Array.from({ length: settings.data?.periods_per_day ?? 7 }, (_, i) => i + 1);
+  const prevPeriod = mode === 'period' && period > 1 ? period - 1 : null;
+  const prevQ = useSession(prevPeriod ? classId : null, date, prevPeriod ?? 0);
   const save = useSaveAttendance();
   const reopen = useReopenSession();
 
   const [marks, setMarks] = React.useState<Map<string, MarkEntry>>(new Map());
   const [saved, setSaved] = React.useState<Map<string, MarkEntry>>(new Map());
-  const [onlyUnmarked, setOnlyUnmarked] = React.useState(false);
+  const [filter, setFilter] = React.useState<'all' | 'unmarked' | 'absent' | 'late'>('all');
   const [correctionOpen, setCorrectionOpen] = React.useState(false);
   const [reopenOpen, setReopenOpen] = React.useState(false);
 
@@ -132,6 +136,29 @@ export function TakeAttendancePage() {
       return next;
     });
 
+  // Copies the previous period's marks to students not yet marked in this period.
+  const prevRecords = prevQ.data?.records ?? [];
+  const copyFromPrevious = () => {
+    const prev = new Map(prevRecords.map((r) => [r.student_id, r]));
+    const next = new Map(marks);
+    let n = 0;
+    for (const st of students) {
+      const r = prev.get(st.student_id);
+      if (r && !next.get(st.student_id)?.status) {
+        next.set(st.student_id, { status: r.status as AttendanceStatus, minutes_late: r.status === 'late' ? r.minutes_late : null, note: next.get(st.student_id)?.note ?? '' });
+        n++;
+      }
+    }
+    setMarks(next);
+    toast.success(n ? `نُسخت حالة ${formatNumber(n)} طالب من ${periodLabel(prevPeriod!)}` : 'لا توجد حالات لنسخها');
+  };
+
+  const stateFor = (p: number) => {
+    const sess = (daySessions.data ?? []).find((x) => x.class_id === classId && x.period === p);
+    if (p === period && session) return completion;
+    return sessionCompletion(students.length, sess?.attendance_records?.[0]?.count ?? 0, sess ? (sess.status as 'draft' | 'submitted') : null);
+  };
+
   const markAllUnmarkedPresent = () =>
     setMarks((prev) => {
       const next = new Map(prev);
@@ -168,7 +195,12 @@ export function TakeAttendancePage() {
   const invalidDay = !isSchoolDay(date);
   const futureDay = date > today;
   const tooOld = !isManager && minDate !== undefined && date < minDate;
-  const visible = onlyUnmarked ? students.filter((s) => !marks.get(s.student_id)?.status) : students;
+  const visible = students.filter((s) => {
+    const st = marks.get(s.student_id)?.status ?? null;
+    return filter === 'all' ? true : filter === 'unmarked' ? !st : st === filter;
+  });
+  const nextPeriod = mode === 'period' && period < periods.length ? period + 1 : null;
+  const pct = students.length ? Math.round((counts.marked / students.length) * 100) : 0;
   const selectedClass = classes.data?.find((c) => c.id === classId);
 
   return (
@@ -176,11 +208,11 @@ export function TakeAttendancePage() {
       <PageHeader
         title="رصد الحضور"
         breadcrumbs={[{ label: 'الحضور والغياب', to: '/attendance' }, { label: 'رصد الحضور' }]}
-        description={mode === 'daily' ? 'نظام الحضور: يومي (جلسة واحدة لكل فصل يوميًا)' : `نظام الحضور: بالحصة (${formatNumber(settings.data?.periods_per_day)} حصص يوميًا)`}
+        description={mode === 'daily' ? 'حضور يومي: جلسة واحدة لكل فصل يوميًا' : `حضور بالحصة: ${formatNumber(settings.data?.periods_per_day)} حصص يوميًا، ولكل حصة رصد مستقل`}
       />
 
-      <Card className="no-print mb-4">
-        <div className="grid gap-3 p-4 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_2fr]">
+      <Card className="no-print mb-4 overflow-hidden">
+        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,16rem)_minmax(10rem,13rem)_1fr]">
           <div>
             <label htmlFor="att-class" className="mb-1 block text-xs font-semibold text-fg-muted">الفصل</label>
             <Select id="att-class" value={classId ?? ''} onChange={(e) => updateParam('class', e.target.value)}>
@@ -192,18 +224,18 @@ export function TakeAttendancePage() {
             <label htmlFor="att-date" className="mb-1 block text-xs font-semibold text-fg-muted">التاريخ</label>
             <Input id="att-date" type="date" value={date} max={today} min={minDate} onChange={(e) => e.target.value && updateParam('date', e.target.value)} />
           </div>
-          {mode === 'period' && (
-            <div>
-              <label htmlFor="att-period" className="mb-1 block text-xs font-semibold text-fg-muted">الحصة</label>
-              <Select id="att-period" value={period} onChange={(e) => updateParam('period', e.target.value)}>
-                {Array.from({ length: settings.data?.periods_per_day ?? 7 }, (_, i) => <option key={i + 1} value={i + 1}>الحصة {formatNumber(i + 1)}</option>)}
-              </Select>
-            </div>
-          )}
-          <div className="flex items-end text-sm text-fg-muted sm:col-span-3 lg:col-span-1">
-            {formatWeekday(date)} {formatDate(date)} · {periodLabel(period)}
+          <div className="flex items-end">
+            <p className="rounded-lg bg-surface-sunken px-3 py-2.5 text-sm font-semibold text-fg">
+              {formatWeekday(date)} · {formatDate(date)}
+            </p>
           </div>
         </div>
+        {mode === 'period' && (
+          <div className="space-y-3 border-t border-line bg-surface-sunken/40 p-4">
+            <PeriodStrip periods={periods} value={period} stateFor={stateFor} onChange={(p) => updateParam('period', String(p))} />
+            {classId && <CompletionLegend />}
+          </div>
+        )}
       </Card>
 
       {!classId ? (
@@ -233,6 +265,9 @@ export function TakeAttendancePage() {
                 {session?.submitted_late && ' (اعتماد متأخر)'}.{' '}
                 {canCorrect ? 'أي تعديل يُحفظ كتصحيح موثق مع ذكر السبب.' : 'التصحيح متاح لشؤون الطلبة، أو للمعلم الراصد في اليوم نفسه.'}
               </span>
+              {nextPeriod && !dirty && (
+                <Button size="sm" onClick={() => updateParam('period', String(nextPeriod))}>{periodLabel(nextPeriod)} <ArrowLeft /></Button>
+              )}
               {isManager && (
                 <Button size="sm" variant="secondary" onClick={() => setReopenOpen(true)}><Unlock /> إعادة فتح للمعلم</Button>
               )}
@@ -246,42 +281,72 @@ export function TakeAttendancePage() {
           )}
 
           <Card>
-            <div className="sticky top-16 z-20 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-t-lg border-b border-line bg-surface/95 px-4 py-3 backdrop-blur">
-              <div className="flex items-center gap-2">
-                <p className="font-bold">فصل {selectedClass?.name}</p>
-                <CompletionBadge state={completion} />
+            <div className="sticky top-16 z-20 space-y-3 rounded-t-lg border-b border-line bg-surface/95 px-4 py-3 backdrop-blur">
+              <div className="flex flex-wrap items-center gap-4">
+                <div
+                  className="relative grid size-14 shrink-0 place-items-center rounded-full"
+                  style={{ background: `conic-gradient(var(--color-success) ${pct * 3.6}deg, var(--color-surface-sunken) 0deg)` }}
+                  role="img"
+                  aria-label={`تم رصد ${pct}٪`}
+                >
+                  <span className="tabular grid size-11 place-items-center rounded-full bg-surface text-sm font-bold">{formatNumber(pct)}٪</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-fg-strong">فصل {selectedClass?.name} · {periodLabel(period)}</p>
+                  <div className="mt-1"><CompletionBadge state={completion} /></div>
+                </div>
+                <div className="ms-auto flex flex-wrap items-center gap-2">
+                  {!readOnly && prevPeriod && prevRecords.length > 0 && counts.unmarked > 0 && (
+                    <Button size="sm" variant="secondary" onClick={copyFromPrevious}><Copy /> نسخ من {periodLabel(prevPeriod)}</Button>
+                  )}
+                  {!readOnly && counts.unmarked > 0 && (
+                    <Button size="sm" variant="subtle" onClick={markAllUnmarkedPresent}><CheckCheck /> الباقون حاضرون</Button>
+                  )}
+                </div>
               </div>
-              <dl className="tabular flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem]" aria-label="ملخص الرصد">
-                {ATTENDANCE_STATUSES.map((s) => (
-                  <div key={s} className="flex gap-1"><dt className="text-fg-muted">{ATTENDANCE_LABELS[s]}:</dt><dd className="font-bold">{formatNumber(counts[s])}</dd></div>
+
+              <div role="tablist" aria-label="تصفية الطلاب" className="flex flex-wrap gap-1.5">
+                {([
+                  ['all', 'الكل', students.length, 'bg-surface-sunken text-fg'],
+                  ['unmarked', 'لم يُرصد', counts.unmarked, 'bg-surface-sunken text-fg'],
+                  ['absent', ATTENDANCE_LABELS.absent, counts.absent, 'bg-danger-soft text-danger'],
+                  ['late', ATTENDANCE_LABELS.late, counts.late, 'bg-warning-soft text-warning'],
+                ] as const).map(([key, label, n, tone]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === key}
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[0.8125rem] font-semibold transition-colors',
+                      filter === key ? 'border-brand bg-brand text-on-brand' : 'border-line hover:border-line-strong',
+                    )}
+                  >
+                    {label}
+                    <span className={cn('tabular min-w-6 rounded-full px-1.5 text-center text-xs leading-5', filter === key ? 'bg-white/20 text-on-brand' : tone)}>{formatNumber(n)}</span>
+                  </button>
                 ))}
-                <div className="flex gap-1"><dt className="text-fg-muted">لم يُرصد:</dt><dd className={cn('font-bold', counts.unmarked > 0 && 'text-warning')}>{formatNumber(counts.unmarked)}</dd></div>
-              </dl>
-              <div className="ms-auto flex flex-wrap items-center gap-2">
-                {!readOnly && counts.unmarked > 0 && (
-                  <Button size="sm" variant="subtle" onClick={markAllUnmarkedPresent}><CheckCheck /> تحديد غير المرصودين حاضرين</Button>
-                )}
-                <label className="flex items-center gap-1.5 text-[0.8125rem] text-fg-muted">
-                  <Checkbox checked={onlyUnmarked} onChange={(e) => setOnlyUnmarked(e.target.checked)} /> غير المرصودين فقط
-                </label>
-              </div>
-              <div className="h-1 w-full overflow-hidden rounded-full bg-surface-sunken" aria-hidden>
-                <m.div className="h-full [background:var(--brand-gradient)]" animate={{ width: `${(counts.marked / students.length) * 100}%` }} transition={spring.sheet} />
+                <span className="ms-auto hidden items-center gap-3 text-[0.8125rem] text-fg-muted md:flex">
+                  <span>{ATTENDANCE_LABELS.present}: <b className="tabular text-success">{formatNumber(counts.present)}</b></span>
+                  <span>{ATTENDANCE_LABELS.excused}: <b className="tabular text-info">{formatNumber(counts.excused)}</b></span>
+                </span>
               </div>
             </div>
 
             <ol className="divide-y divide-line" aria-label="قائمة طلاب الجلسة">
-              {visible.map((s, i) => {
+              {visible.map((s) => {
                 const m = marks.get(s.student_id);
                 const changed = changes.some((c) => c.student_id === s.student_id);
+                const idx = students.indexOf(s) + 1;
                 return (
-                  <li key={s.student_id} className={cn('grid gap-2 px-4 py-2.5 md:grid-cols-[2.5rem_minmax(12rem,1fr)_auto_minmax(10rem,14rem)] md:items-center', changed && 'bg-warning-soft/50', !m?.status && 'bg-surface-sunken/40')}>
-                    <span className="tabular hidden text-sm text-fg-subtle md:block">{formatNumber(students.indexOf(s) + 1 || i + 1)}</span>
+                  <li key={s.student_id} className={cn('grid items-center gap-x-3 gap-y-2 px-4 py-3 md:grid-cols-[2.25rem_minmax(12rem,1fr)_auto_minmax(10rem,15rem)]', changed && 'bg-warning-soft/40')}>
+                    <span className={cn('tabular hidden size-9 place-items-center rounded-full text-sm font-bold md:grid', m?.status ? 'bg-surface-sunken text-fg-muted' : 'border border-dashed border-line-strong text-fg-subtle')}>{formatNumber(idx)}</span>
                     <div className="min-w-0">
-                      <p className="truncate font-semibold">{s.full_name}</p>
+                      <p className="font-semibold leading-snug">{s.full_name}</p>
                       <p className="flex items-center gap-2 text-xs text-fg-muted">
                         <span className="ltr tabular">{s.student_number}</span>
-                        {!m?.status && <AttendanceBadge status={null} />}
+                        {!m?.status && <span className="font-semibold text-fg-subtle">· لم يُرصد</span>}
                         {changed && <span className="font-semibold text-warning">· غير محفوظ</span>}
                       </p>
                     </div>
@@ -289,31 +354,31 @@ export function TakeAttendancePage() {
                     <div className="flex gap-2">
                       {m?.status === 'late' && (
                         <label className="flex shrink-0 items-center gap-1 text-xs text-fg-muted">
-                          <Input type="number" min={1} max={300} className="h-8 w-16 px-2 text-center" aria-label={`دقائق تأخر ${s.full_name}`} disabled={readOnly} value={m.minutes_late ?? ''} onChange={(e) => setMark(s.student_id, { minutes_late: e.target.value ? Math.min(300, Math.max(1, Number(e.target.value))) : null })} />
+                          <Input type="number" min={1} max={300} className="h-9 w-16 px-2 text-center" aria-label={`دقائق تأخر ${s.full_name}`} disabled={readOnly} value={m.minutes_late ?? ''} onChange={(e) => setMark(s.student_id, { minutes_late: e.target.value ? Math.min(300, Math.max(1, Number(e.target.value))) : null })} />
                           د
                         </label>
                       )}
-                      <Input className="h-8 text-xs" placeholder="ملاحظة (اختياري)" aria-label={`ملاحظة ${s.full_name}`} maxLength={500} disabled={readOnly} value={m?.note ?? ''} onChange={(e) => setMark(s.student_id, { note: e.target.value })} />
+                      <Input className="h-9 text-xs" placeholder="ملاحظة (اختياري)" aria-label={`ملاحظة ${s.full_name}`} maxLength={500} disabled={readOnly} value={m?.note ?? ''} onChange={(e) => setMark(s.student_id, { note: e.target.value })} />
                     </div>
                   </li>
                 );
               })}
-              {visible.length === 0 && <li><EmptyState icon={<CheckCheck />} title="تم رصد جميع الطلاب" className="py-8" /></li>}
+              {visible.length === 0 && <li><EmptyState icon={<CheckCheck />} title={filter === 'unmarked' ? 'تم رصد جميع الطلاب' : 'لا يوجد طلاب بهذه الحالة'} className="py-8" /></li>}
             </ol>
 
             {!readOnly && (
-              <div className="sticky bottom-0 z-20 flex flex-wrap items-center gap-3 rounded-b-lg border-t border-line bg-surface/95 px-4 py-3 backdrop-blur">
-                <p className="text-[0.8125rem] text-fg-muted" aria-live="polite">
+              <div className="sticky bottom-0 z-20 flex flex-wrap items-center gap-3 rounded-b-lg border-t border-line bg-surface/95 px-4 py-3 backdrop-blur max-sm:bottom-[calc(4rem+env(safe-area-inset-bottom))]">
+                <p className="hidden text-[0.8125rem] text-fg-muted sm:block" aria-live="polite">
                   {dirty ? `${formatNumber(changes.length)} تغيير غير محفوظ` : 'لا توجد تغييرات غير محفوظة'}
                   {!submitted && counts.unmarked > 0 && ` · يتطلب الاعتماد رصد جميع الطلاب (${formatNumber(counts.unmarked)} متبقٍ)`}
                 </p>
-                <div className="ms-auto flex gap-2">
+                <div className="flex w-full gap-2 sm:ms-auto sm:w-auto [&>button]:flex-1 sm:[&>button]:flex-none">
                   {submitted ? (
                     <Button disabled={!dirty} onClick={() => setCorrectionOpen(true)}><Save /> حفظ التصحيح</Button>
                   ) : (
                     <>
                       <Button variant="secondary" disabled={!dirty} loading={save.isPending && !save.variables?.submit} onClick={() => persist(false)}><Save /> حفظ كمسودة</Button>
-                      <Button disabled={counts.unmarked > 0} loading={save.isPending && save.variables?.submit} onClick={() => persist(true)}><Send className="rtl:-scale-x-100" /> اعتماد الحضور</Button>
+                      <Button disabled={counts.unmarked > 0} loading={save.isPending && save.variables?.submit} onClick={() => persist(true)}><Send className="rtl:-scale-x-100" /> اعتماد {periodLabel(period)}</Button>
                     </>
                   )}
                 </div>

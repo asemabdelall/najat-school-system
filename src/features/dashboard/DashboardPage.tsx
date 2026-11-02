@@ -12,7 +12,7 @@ import { CompletionBadge, DueBadge, FollowUpStatusBadge, IncidentStatusBadge } f
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
 import { addDays, formatDate, formatNumber, formatPercent, formatWeekday, isSchoolDay, kuwaitToday, previousSchoolDay, startOfMonth } from '@/lib/format';
-import { useClasses, useCurrentYear, useSchoolSettings } from '@/lib/queries';
+import { useClasses, useCurrentYear, useSchoolSettings, useYearScope } from '@/lib/queries';
 import { periodLabel, sessionCompletion, type AttendanceMode } from '@/lib/domain/attendance';
 import { dueState, type FollowUpStatus } from '@/lib/domain/followups';
 import type { IncidentStatus } from '@/lib/domain/behavior';
@@ -70,15 +70,18 @@ function ManagerDashboard() {
     queryKey: ['dashboard', 'trend', trendRange.from, trendRange.to],
     queryFn: async () => unwrap(await supabase.rpc('attendance_trend', { p_from: trendRange.from, p_to: trendRange.to })) as TrendRow[],
   });
+  const { yearId } = useYearScope();
   const incidents = useQuery({
-    queryKey: ['dashboard', 'pending-incidents'],
+    queryKey: ['dashboard', 'pending-incidents', yearId],
     queryFn: async () =>
-      unwrap(await supabase.from('behavior_incidents').select('id, incident_date, status, behavior_categories(name), incident_students(count)').in('status', ['submitted', 'under_review']).order('created_at', { ascending: false }).limit(5)),
+      unwrap(await supabase.from('behavior_incidents').select('id, incident_date, status, behavior_categories(name), incident_students(count)').eq('academic_year_id', yearId!).in('status', ['submitted', 'under_review']).order('created_at', { ascending: false }).limit(5)),
+    enabled: Boolean(yearId),
   });
   const overdue = useQuery({
-    queryKey: ['dashboard', 'overdue'],
+    queryKey: ['dashboard', 'overdue', yearId],
     queryFn: async () =>
-      unwrap(await supabase.from('follow_up_tasks').select('id, title, status, due_date, assignee:profiles!follow_up_tasks_assigned_to_fkey(full_name)').in('status', ['open', 'in_progress']).lt('due_date', today).order('due_date').limit(5)),
+      unwrap(await supabase.from('follow_up_tasks').select('id, title, status, due_date, assignee:profiles!follow_up_tasks_assigned_to_fkey(full_name)').eq('academic_year_id', yearId!).in('status', ['open', 'in_progress']).lt('due_date', today).order('due_date').limit(5)),
+    enabled: Boolean(yearId),
   });
 
   const o = overview.data;
@@ -183,15 +186,17 @@ function TeacherDashboard() {
     queryKey: ['dashboard', 'teacher-sessions', day],
     queryFn: async () => unwrap(await supabase.from('attendance_sessions').select('class_id, period, status, attendance_records(count)').eq('session_date', day)),
   });
+  const { yearId } = useYearScope();
   const tasks = useQuery({
-    queryKey: ['dashboard', 'teacher-tasks', profile?.id],
+    queryKey: ['dashboard', 'teacher-tasks', profile?.id, yearId],
     queryFn: async () =>
-      unwrap(await supabase.from('follow_up_tasks').select('id, title, status, due_date, students(full_name)').eq('assigned_to', profile!.id).in('status', ['open', 'in_progress']).order('due_date', { nullsFirst: false }).limit(8)),
-    enabled: Boolean(profile),
+      unwrap(await supabase.from('follow_up_tasks').select('id, title, status, due_date, students(full_name)').eq('academic_year_id', yearId!).eq('assigned_to', profile!.id).in('status', ['open', 'in_progress']).order('due_date', { nullsFirst: false }).limit(8)),
+    enabled: Boolean(profile) && Boolean(yearId),
   });
   const myIncidents = useQuery({
-    queryKey: ['dashboard', 'teacher-incidents'],
-    queryFn: async () => unwrap(await supabase.from('behavior_incidents').select('id, incident_date, status, behavior_categories(name)').order('created_at', { ascending: false }).limit(5)),
+    queryKey: ['dashboard', 'teacher-incidents', yearId],
+    queryFn: async () => unwrap(await supabase.from('behavior_incidents').select('id, incident_date, status, behavior_categories(name)').eq('academic_year_id', yearId!).order('created_at', { ascending: false }).limit(5)),
+    enabled: Boolean(yearId),
   });
 
   const byKey = new Map((sessions.data ?? []).map((s) => [`${s.class_id}|${s.period}`, s]));

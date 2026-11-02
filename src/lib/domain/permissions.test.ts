@@ -3,7 +3,7 @@ import { can, isManagerRole, permissionsFor, primaryRole } from './permissions';
 
 describe('role-based action availability', () => {
   it('teachers cannot manage students, users, settings or review', () => {
-    for (const p of ['students.manage', 'users.manage', 'settings.manage', 'behavior.review', 'excuses.review', 'audit.view', 'classes.manage'] as const) {
+    for (const p of ['students.manage', 'users.manage', 'settings.manage', 'behavior.review', 'excuses.review', 'audit.view', 'classes.manage', 'discipline.manage', 'archive.view'] as const) {
       expect(can(['teacher'], p), p).toBe(false);
     }
   });
@@ -21,7 +21,7 @@ describe('role-based action availability', () => {
     expect(can(['student_affairs'], 'audit.view')).toBe(false);
   });
   it('admins hold every permission', () => {
-    expect(permissionsFor(['admin']).size).toBe(21);
+    expect(permissionsFor(['admin']).size).toBe(23);
   });
   it('combines multiple roles', () => {
     expect(can(['teacher', 'student_affairs'], 'behavior.review')).toBe(true);

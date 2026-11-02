@@ -7,17 +7,23 @@ export type Database = {
           Tables: {
             "absence_excuses": {
                   Row: {
-                    "created_at": string,"details": string | null,"from_date": string,"id": string,"reason_type": string,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": string,"student_id": string,"submitted_by": string | null,"to_date": string,"updated_at": string
+                    "academic_year_id": string | null,"created_at": string,"details": string | null,"from_date": string,"id": string,"reason_type": string,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": string,"student_id": string,"submitted_by": string | null,"to_date": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"details"?: string | null,"from_date": string,"id"?: string,"reason_type": string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"student_id": string,"submitted_by"?: string | null,"to_date": string,"updated_at"?: string
+                    "academic_year_id"?: string | null,"created_at"?: string,"details"?: string | null,"from_date": string,"id"?: string,"reason_type": string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"student_id": string,"submitted_by"?: string | null,"to_date": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"details"?: string | null,"from_date"?: string,"id"?: string,"reason_type"?: string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"student_id"?: string,"submitted_by"?: string | null,"to_date"?: string,"updated_at"?: string
+                    "academic_year_id"?: string | null,"created_at"?: string,"details"?: string | null,"from_date"?: string,"id"?: string,"reason_type"?: string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"student_id"?: string,"submitted_by"?: string | null,"to_date"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "absence_excuses_academic_year_id_fkey"
+      columns: ["academic_year_id"]
+isOneToOne: false
+      referencedRelation: "academic_years"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "absence_excuses_reviewed_by_fkey"
       columns: ["reviewed_by"]
 isOneToOne: false
@@ -193,31 +199,25 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"career_quiz_results": {
-                  Row: {
-                    "academic_year_id": string,"class_id": string | null,"id": string,"scores": Json,"student_id": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "academic_year_id": string,"class_id"?: string | null,"id"?: string,"scores": Json,"student_id": string,"submitted_at"?: string,"top_1": string,"top_2": string,"top_3": string
-                  }
-                  Update: {
-                    "academic_year_id"?: string,"class_id"?: string | null,"id"?: string,"scores"?: Json,"student_id"?: string,"submitted_at"?: string,"top_1"?: string,"top_2"?: string,"top_3"?: string
-                  }
-                  Relationships: []
                 },"behavior_incidents": {
                   Row: {
-                    "category_id": string,"created_at": string,"decision_note": string | null,"description": string,"id": string,"incident_date": string,"location": string | null,"reported_by": string | null,"resolved_at": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"severity": string,"status": string,"updated_at": string
+                    "academic_year_id": string | null,"category_id": string,"created_at": string,"decision_note": string | null,"description": string,"id": string,"incident_date": string,"location": string | null,"reported_by": string | null,"resolved_at": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"severity": string,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "category_id": string,"created_at"?: string,"decision_note"?: string | null,"description": string,"id"?: string,"incident_date": string,"location"?: string | null,"reported_by"?: string | null,"resolved_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"severity": string,"status"?: string,"updated_at"?: string
+                    "academic_year_id"?: string | null,"category_id": string,"created_at"?: string,"decision_note"?: string | null,"description": string,"id"?: string,"incident_date": string,"location"?: string | null,"reported_by"?: string | null,"resolved_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"severity": string,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "category_id"?: string,"created_at"?: string,"decision_note"?: string | null,"description"?: string,"id"?: string,"incident_date"?: string,"location"?: string | null,"reported_by"?: string | null,"resolved_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"severity"?: string,"status"?: string,"updated_at"?: string
+                    "academic_year_id"?: string | null,"category_id"?: string,"created_at"?: string,"decision_note"?: string | null,"description"?: string,"id"?: string,"incident_date"?: string,"location"?: string | null,"reported_by"?: string | null,"resolved_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"severity"?: string,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "behavior_incidents_academic_year_id_fkey"
+      columns: ["academic_year_id"]
+isOneToOne: false
+      referencedRelation: "academic_years"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "behavior_incidents_category_id_fkey"
       columns: ["category_id"]
 isOneToOne: false
@@ -232,6 +232,82 @@ isOneToOne: false
     },{
       foreignKeyName: "behavior_incidents_reviewed_by_fkey"
       columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"career_quiz_results": {
+                  Row: {
+                    "academic_year_id": string,"class_id": string | null,"id": string,"scores": NonNullable<Json>,"student_id": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "academic_year_id": string,"class_id"?: string | null,"id"?: string,"scores": NonNullable<Json>,"student_id": string,"submitted_at"?: string,"top_1": string,"top_2": string,"top_3": string
+                  }
+                  Update: {
+                    "academic_year_id"?: string,"class_id"?: string | null,"id"?: string,"scores"?: NonNullable<Json>,"student_id"?: string,"submitted_at"?: string,"top_1"?: string,"top_2"?: string,"top_3"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "career_quiz_results_academic_year_id_fkey"
+      columns: ["academic_year_id"]
+isOneToOne: false
+      referencedRelation: "academic_years"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "career_quiz_results_class_id_fkey"
+      columns: ["class_id"]
+isOneToOne: false
+      referencedRelation: "school_classes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "career_quiz_results_student_id_fkey"
+      columns: ["student_id"]
+isOneToOne: false
+      referencedRelation: "students"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"disciplinary_actions": {
+                  Row: {
+                    "academic_year_id": string,"action_type": string,"attendee_name": string | null,"cancel_reason": string | null,"created_at": string,"decision_number": string | null,"id": string,"incident_id": string | null,"issued_by": string | null,"meeting_at": string | null,"meeting_with": string | null,"outcome_notes": string | null,"pledge_text": string | null,"reason": string,"signed_on": string | null,"status": string,"student_id": string,"suspension_from": string | null,"suspension_to": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "academic_year_id"?: string,"action_type": string,"attendee_name"?: string | null,"cancel_reason"?: string | null,"created_at"?: string,"decision_number"?: string | null,"id"?: string,"incident_id"?: string | null,"issued_by"?: string | null,"meeting_at"?: string | null,"meeting_with"?: string | null,"outcome_notes"?: string | null,"pledge_text"?: string | null,"reason": string,"signed_on"?: string | null,"status": string,"student_id": string,"suspension_from"?: string | null,"suspension_to"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "academic_year_id"?: string,"action_type"?: string,"attendee_name"?: string | null,"cancel_reason"?: string | null,"created_at"?: string,"decision_number"?: string | null,"id"?: string,"incident_id"?: string | null,"issued_by"?: string | null,"meeting_at"?: string | null,"meeting_with"?: string | null,"outcome_notes"?: string | null,"pledge_text"?: string | null,"reason"?: string,"signed_on"?: string | null,"status"?: string,"student_id"?: string,"suspension_from"?: string | null,"suspension_to"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "disciplinary_actions_academic_year_id_fkey"
+      columns: ["academic_year_id"]
+isOneToOne: false
+      referencedRelation: "academic_years"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "disciplinary_actions_incident_id_fkey"
+      columns: ["incident_id"]
+isOneToOne: false
+      referencedRelation: "behavior_incidents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "disciplinary_actions_issued_by_fkey"
+      columns: ["issued_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "disciplinary_actions_student_id_fkey"
+      columns: ["student_id"]
+isOneToOne: false
+      referencedRelation: "students"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "disciplinary_actions_updated_by_fkey"
+      columns: ["updated_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -291,17 +367,23 @@ isOneToOne: false
                   ]
                 },"follow_up_tasks": {
                   Row: {
-                    "assigned_to": string,"category": string,"completed_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"due_date": string | null,"due_soon_notified_at": string | null,"id": string,"incident_id": string | null,"outcome": string | null,"priority": string,"status": string,"student_id": string | null,"title": string,"updated_at": string
+                    "academic_year_id": string | null,"assigned_to": string,"category": string,"completed_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"due_date": string | null,"due_soon_notified_at": string | null,"id": string,"incident_id": string | null,"outcome": string | null,"priority": string,"status": string,"student_id": string | null,"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "assigned_to": string,"category"?: string,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"due_date"?: string | null,"due_soon_notified_at"?: string | null,"id"?: string,"incident_id"?: string | null,"outcome"?: string | null,"priority"?: string,"status"?: string,"student_id"?: string | null,"title": string,"updated_at"?: string
+                    "academic_year_id"?: string | null,"assigned_to": string,"category"?: string,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"due_date"?: string | null,"due_soon_notified_at"?: string | null,"id"?: string,"incident_id"?: string | null,"outcome"?: string | null,"priority"?: string,"status"?: string,"student_id"?: string | null,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "assigned_to"?: string,"category"?: string,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"due_date"?: string | null,"due_soon_notified_at"?: string | null,"id"?: string,"incident_id"?: string | null,"outcome"?: string | null,"priority"?: string,"status"?: string,"student_id"?: string | null,"title"?: string,"updated_at"?: string
+                    "academic_year_id"?: string | null,"assigned_to"?: string,"category"?: string,"completed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"due_date"?: string | null,"due_soon_notified_at"?: string | null,"id"?: string,"incident_id"?: string | null,"outcome"?: string | null,"priority"?: string,"status"?: string,"student_id"?: string | null,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "follow_up_tasks_academic_year_id_fkey"
+      columns: ["academic_year_id"]
+isOneToOne: false
+      referencedRelation: "academic_years"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "follow_up_tasks_assigned_to_fkey"
       columns: ["assigned_to"]
 isOneToOne: false
@@ -519,7 +601,13 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "add_incident_action":
+            "academic_year_close_preview":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"academic_year_summary":
+{ Args: { "p_year_id": string }; Returns: Json
+                           },
+"add_incident_action":
 { Args: { "p_incident_id": string,"p_note": string,"p_type": string }; Returns: undefined
                            },
 "ar_normalize":
@@ -541,18 +629,8 @@ isOneToOne: false
 "can_view_student":
 { Args: { "_student_id": string }; Returns: boolean
                            },
-"class_attendance_summary":
-{ Args: { "p_from": string,"p_to": string }; Returns: {
-              "absent": number,"class_id": string,"class_name": string,"enrolled": number,"excused": number,"grade_level": number,"late": number,"present": number,"rate": number,"sessions": number,"sessions_submitted": number
-            }[]
-                           },
-"class_roster":
-{ Args: { "p_class_id": string,"p_date": string }; Returns: {
-              "enrollment_id": string,"full_name": string,"student_id": string,"student_number": string
-            }[]
-                           },
 "career_categories":
-{ Args: Record<PropertyKey, never>; Returns: string[]
+{ Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
 "career_quiz_overview":
 { Args: { "p_class_id"?: string }; Returns: {
@@ -567,27 +645,35 @@ isOneToOne: false
               "attempts": number,"class_id": string,"class_name": string,"full_name": string,"student_id": string,"student_number": string,"submitted_at": string,"top_1": string,"top_2": string,"top_3": string,"total_count": number
             }[]
                            },
+"class_attendance_summary":
+{ Args: { "p_from": string,"p_to": string }; Returns: {
+              "absent": number,"class_id": string,"class_name": string,"enrolled": number,"excused": number,"grade_level": number,"late": number,"present": number,"rate": number,"sessions": number,"sessions_submitted": number
+            }[]
+                           },
+"class_roster":
+{ Args: { "p_class_id": string,"p_date": string }; Returns: {
+              "enrollment_id": string,"full_name": string,"student_id": string,"student_number": string
+            }[]
+                           },
+"close_academic_year":
+{ Args: { "p_confirm_name": string,"p_copy_classes"?: boolean,"p_graduating_grade"?: number,"p_new_ends_on": string,"p_new_name": string,"p_new_starts_on": string }; Returns: string
+                           },
 "create_student":
-{ Args: { "p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string } | { "p_civil_id": string,"p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string }; Returns: string
-                           },
-"is_valid_civil_id":
-{ Args: { "p": string }; Returns: boolean
-                           },
-"quiz_find_student":
-{ Args: { "p_civil_id": string }; Returns: {
-              "class_name": string,"full_name": string,"grade_level": number,"section": string
-            }[]
-                           },
-"quiz_submit_result":
-{ Args: { "p_civil_id": string,"p_scores": Json }; Returns: {
-              "top_1": string,"top_2": string,"top_3": string
-            }[]
+{ Args: { "p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string }; Returns: string
+                           } |
+{ Args: { "p_civil_id": string,"p_class_id": string,"p_date_of_birth": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_notes": string,"p_student_number": string }; Returns: string
                            },
 "current_academic_year_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "dashboard_overview":
 { Args: { "p_from": string,"p_to": string }; Returns: Json
+                           },
+"discipline_overview":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"discipline_transition_allowed":
+{ Args: { "p_from": string,"p_to": string,"p_type": string }; Returns: boolean
                            },
 "enroll_student":
 { Args: { "p_class_id": string,"p_date"?: string,"p_student_id": string }; Returns: string
@@ -620,6 +706,9 @@ isOneToOne: false
 "is_manager":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"is_valid_civil_id":
+{ Args: { "p": string }; Returns: boolean
+                           },
 "kw_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -635,6 +724,16 @@ isOneToOne: false
 "password_changed":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"quiz_find_student":
+{ Args: { "p_civil_id": string }; Returns: {
+              "class_name": string,"full_name": string,"grade_level": number,"section": string
+            }[]
+                           },
+"quiz_submit_result":
+{ Args: { "p_civil_id": string,"p_scores": Json }; Returns: {
+              "top_1": string,"top_2": string,"top_3": string
+            }[]
+                           },
 "refresh_due_soon_notifications":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -643,6 +742,9 @@ isOneToOne: false
                            },
 "require_staff":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"return_student":
+{ Args: { "p_class_id": string,"p_full_name": string,"p_guardian_name": string,"p_guardian_phone": string,"p_student_number": string }; Returns: string
                            },
 "review_absence_excuse":
 { Args: { "p_decision": string,"p_excuse_id": string,"p_note"?: string }; Returns: number
@@ -672,6 +774,9 @@ isOneToOne: false
                            },
 "write_audit":
 { Args: { "_action": string,"_changes": Json,"_reason"?: string,"_record": string,"_table": string }; Returns: undefined
+                           },
+"year_is_closed":
+{ Args: { "p_year_id": string }; Returns: boolean
                            }
           }
           Enums: {

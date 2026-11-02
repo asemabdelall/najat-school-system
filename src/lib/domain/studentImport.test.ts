@@ -40,12 +40,20 @@ describe('student import', () => {
       ],
       map,
       classes,
-      new Set(['nj-0007']),
+      new Map([['nj-0007', 'active']]),
     );
     expect(rows[0]).toMatchObject({ line: 2, errors: [], classId: 'c101', values: { student_number: 'NJ-1001', date_of_birth: '2010-03-15' } });
     expect(rows[1].errors).toEqual(['الرقم الطلابي مكرر في الملف (السطر 2)']);
     expect(rows[1].classId).toBe('c112');
     expect(rows[2].errors).toHaveLength(4); // existing number, out-of-range DOB, bad phone, unknown class
     expect(rows[3].errors).toEqual(['الرقم الطلابي مطلوب', 'اسم الطالب بين ٣ و١٢٠ حرفًا']);
+  });
+  it('accepts students archived at a previous year-end as returning (class required), and rejects graduates', () => {
+    const { map } = mapHeaders(['الرقم الطلابي', 'اسم الطالب', 'الفصل']);
+    const existing = new Map([['nj-2001', 'archived'], ['nj-2002', 'archived'], ['nj-2003', 'graduated']]);
+    const rows = validateImport([['NJ-2001', 'طالب عائد', '10/1'], ['NJ-2002', 'طالب عائد بلا فصل', ''], ['NJ-2003', 'خريج سابق', '10/1']], map, classes, existing);
+    expect(rows[0]).toMatchObject({ errors: [], returning: true, classId: 'c101' });
+    expect(rows[1].errors).toEqual(['طالب من عام سابق: حدّد فصله في العام الحالي لإعادة تسجيله']);
+    expect(rows[2].errors).toEqual(['الطالب متخرج في عام سابق']);
   });
 });

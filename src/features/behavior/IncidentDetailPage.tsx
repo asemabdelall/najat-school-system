@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { CheckCircle2, Flag, ListPlus, MessageSquarePlus, Pencil, Send } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
+import { NewDisciplineMenu } from '@/features/discipline/DisciplinePage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/states';
@@ -64,6 +65,7 @@ export function IncidentDetailPage() {
                 <Link to={`/follow-ups?new=1&student=${firstStudent.id}&incident=${i.id}&category=behavior`}><ListPlus /> إنشاء مهمة متابعة</Link>
               </Button>
             )}
+            {isManager && firstStudent && <NewDisciplineMenu studentId={firstStudent.id} incidentId={i.id} />}
           </>
         }
       />

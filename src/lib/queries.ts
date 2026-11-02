@@ -38,6 +38,19 @@ export function useCurrentYear() {
   return { ...years, data: years.data?.find((y) => y.is_current) ?? null };
 }
 
+/** Matches no row: used when there is no current year, so year-scoped lists come back empty. */
+export const NO_YEAR = '00000000-0000-0000-0000-000000000000';
+
+/**
+ * The current academic year's id for scoping lists (incidents, follow-ups,
+ * excuses, discipline). Day-to-day screens show the current year only;
+ * closed years are reached through the archive.
+ */
+export function useYearScope() {
+  const year = useCurrentYear();
+  return { yearId: year.isSuccess ? (year.data?.id ?? NO_YEAR) : undefined, year: year.data };
+}
+
 /** Classes visible to the user (RLS: managers all, teachers assigned). */
 export function useClasses(yearId?: string | null, opts: { includeArchived?: boolean } = {}) {
   return useQuery({

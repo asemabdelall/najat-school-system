@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
 import { kuwaitToday } from '@/lib/format';
+import { useYearScope } from '@/lib/queries';
 import type { TablesInsert, TablesUpdate } from '@/lib/database.types';
 
 export type FollowUpFilters = { status: string; assignee: string | null; category: string | null; overdue: boolean; page: number };
@@ -11,12 +12,15 @@ const LIST_SELECT =
   'id, title, category, priority, status, due_date, created_at, student_id, students(full_name), assignee:profiles!follow_up_tasks_assigned_to_fkey(id, full_name), creator:profiles!follow_up_tasks_created_by_fkey(full_name)';
 
 export function useFollowUps(f: FollowUpFilters) {
+  const { yearId } = useYearScope();
   return useQuery({
-    queryKey: ['follow-ups', 'list', f],
+    queryKey: ['follow-ups', 'list', yearId, f],
+    enabled: Boolean(yearId),
     queryFn: async () => {
       let q = supabase.from('follow_up_tasks').select(LIST_SELECT, { count: 'exact' })
         .order('due_date', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false })
         .range((f.page - 1) * FOLLOWUP_PAGE, f.page * FOLLOWUP_PAGE - 1);
+      q = q.eq('academic_year_id', yearId!);
       if (f.status === 'active') q = q.in('status', ['open', 'in_progress']);
       else if (f.status) q = q.eq('status', f.status);
       if (f.assignee) q = q.eq('assigned_to', f.assignee);
