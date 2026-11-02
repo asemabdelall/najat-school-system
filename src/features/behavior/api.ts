@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
+import { useYearScope } from '@/lib/queries';
 import type { IncidentStatus, Severity } from '@/lib/domain/behavior';
 
 export type IncidentFilters = {
@@ -15,8 +16,10 @@ export type IncidentFilters = {
 export const INCIDENT_PAGE = 20;
 
 export function useIncidents(f: IncidentFilters) {
+  const { yearId } = useYearScope();
   return useQuery({
-    queryKey: ['incidents', 'list', f],
+    queryKey: ['incidents', 'list', yearId, f],
+    enabled: Boolean(yearId),
     queryFn: async () => {
       // Inner joins are only added when filtering through them.
       const studentJoin = f.classId
@@ -33,6 +36,7 @@ export function useIncidents(f: IncidentFilters) {
       let q = supabase.from('behavior_incidents').select(select, { count: 'exact' })
         .order('incident_date', { ascending: false }).order('created_at', { ascending: false })
         .range((f.page - 1) * INCIDENT_PAGE, f.page * INCIDENT_PAGE - 1);
+      q = q.eq('academic_year_id', yearId!);
       if (f.status === 'open') q = q.in('status', ['submitted', 'under_review']);
       else if (f.status) q = q.eq('status', f.status);
       if (f.categoryId) q = q.eq('category_id', f.categoryId);

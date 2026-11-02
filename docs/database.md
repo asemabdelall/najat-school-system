@@ -10,6 +10,8 @@ PostgreSQL (Supabase). All schema lives in versioned migrations under `supabase/
 | `…04_workflows.sql` | Atomic workflow functions (enrol, attendance save/submit/reopen, excuse review, incident lifecycle, reminders) |
 | `…05_reporting.sql` | Dashboard and report aggregations (SECURITY INVOKER) |
 | `…06_student_search.sql` | Arabic-normalised, RLS-scoped student search |
+| `…12_academic_year_separation.sql` | Year tags on incidents/follow-ups/excuses, closed-year guards, year-scoped dashboard, `close_academic_year()`, `return_student()`, archive summary |
+| `…13_discipline.sql` | `disciplinary_actions` (guardian summons, suspension, pledge), transitions, overlap guard, `discipline_overview()` |
 | `…10_career_quiz.sql` | `students.civil_id`, `career_quiz_results`, public quiz functions, `career_quiz_overview()` report |
 
 `supabase/seed.sql` (fictional reference data) runs **only** on local `db reset`; it is not a migration.
@@ -96,6 +98,23 @@ The functions in `…05_reporting.sql` are **SECURITY INVOKER**, so RLS filters 
 
 * `profiles.must_change_password` (temporary-password gate) and `password_changed()`.
 * `guard_auth_user_insert`: deferred constraint trigger on `auth.users` that only admits staff accounts created by the service role.
+
+## Academic years (migration 012)
+
+* **One year at a time on screen.** Incidents, follow-ups, excuses and discipline carry `academic_year_id` (default: the current year); classes, enrollments and therefore attendance already belonged to a year. Day-to-day lists filter on the current year; earlier years are read through the archive (`/archive`).
+* **Closed years are read-only.** `guard_open_year()` and `guard_attendance_open_year()` reject inserts/updates for a closed year, including through workflow functions.
+* **`close_academic_year()`** (admin, confirmation = current year's name), in one transaction: graduating grade → `graduated`; every other student enrolled that year → `archived`; enrollments → `completed`; the year → `closed`; a new current year is created, optionally with the same class structure. Audited.
+* **Returning students:** the import re-activates an archived student with the same student number and enrols them (`return_student()`), so one student keeps one record across years.
+
+## Discipline (migration 013)
+
+| Type | Statuses |
+|---|---|
+| `guardian_summons` (استدعاء ولي أمر) | scheduled → attended / no_show / cancelled; no_show → scheduled |
+| `suspension` (قرار فصل مؤقت, ≤ 30 days) | issued → cancelled |
+| `pledge` (تعهد) | pending_signature → signed / cancelled |
+
+Managers only (RLS). No deletes: decisions are cancelled with a reason. A signed pledge cannot be edited; a student cannot have two overlapping issued suspensions. Free text (reason, notes, pledge wording) is excluded from the audit log.
 
 ## Indexes
 

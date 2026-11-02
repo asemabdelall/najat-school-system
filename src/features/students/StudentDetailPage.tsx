@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Archive, ArrowLeftRight, CalendarCheck2, Flag, History, ListChecks, Pencil, RotateCcw, UserRound } from 'lucide-react';
+import { Archive, ArrowLeftRight, CalendarCheck2, Flag, Gavel, History, ListChecks, Pencil, RotateCcw, UserRound } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,9 @@ import type { IncidentStatus } from '@/lib/domain/behavior';
 import { dueState, type FollowUpStatus } from '@/lib/domain/followups';
 import { useClasses, useCurrentYear } from '@/lib/queries';
 import { StudentFormDialog } from './StudentFormDialog';
+import { DisciplineSummary, NewDisciplineMenu, TYPE_ICON } from '@/features/discipline/DisciplinePage';
+import { useStudentDiscipline } from '@/features/discipline/api';
+import { DISCIPLINE_STATUS_LABELS, DISCIPLINE_STATUS_TONE, DISCIPLINE_TYPE_LABELS, type DisciplineStatus, type DisciplineType } from '@/lib/domain/discipline';
 import { StudentStatusBadge } from './StudentsPage';
 import { useEnrollStudent, useSetStudentStatus, useStudent, useStudentEnrollments } from './api';
 
@@ -104,6 +107,7 @@ export function StudentDetailPage() {
   const { can, isManager } = useAuth();
   const student = useStudent(studentId);
   const enrollments = useStudentEnrollments(studentId);
+  const discipline = useStudentDiscipline(studentId, can('discipline.manage'));
   const year = useCurrentYear();
   const setStatus = useSetStudentStatus(studentId ?? '');
   const [editOpen, setEditOpen] = React.useState(false);
@@ -243,6 +247,7 @@ export function StudentDetailPage() {
           <TabsTrigger value="attendance"><CalendarCheck2 /> سجل الحضور</TabsTrigger>
           <TabsTrigger value="behavior"><Flag /> السلوك</TabsTrigger>
           <TabsTrigger value="followups"><ListChecks /> المتابعة</TabsTrigger>
+          {can('discipline.manage') && <TabsTrigger value="discipline"><Gavel /> الجزاءات</TabsTrigger>}
           <TabsTrigger value="enrollments"><History /> سجل التسجيل</TabsTrigger>
         </TabsList>
 
@@ -343,6 +348,34 @@ export function StudentDetailPage() {
             </QueryState>
           </Card>
         </TabsContent>
+
+        {can('discipline.manage') && (
+          <TabsContent value="discipline" className="mt-4">
+            <Card>
+              <CardHeader title="الجزاءات" description="استدعاءات ولي الأمر وقرارات الفصل والتعهدات في كل الأعوام" actions={s.status === 'active' && <NewDisciplineMenu studentId={s.id} size="sm" />} />
+              <QueryState query={discipline} isEmpty={(d) => d.length === 0} empty={<EmptyState icon={<Gavel />} title="لا توجد جزاءات للطالب" />}>
+                {(rows) => (
+                  <ul className="divide-y divide-line">
+                    {rows.map((d) => {
+                      const Icon = TYPE_ICON[d.action_type as DisciplineType];
+                      return (
+                        <li key={d.id}>
+                          <Link to={`/discipline/${d.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 hover:bg-surface-hover">
+                            <Icon className="size-4 text-brand dark:text-link" aria-hidden />
+                            <span className="font-semibold">{DISCIPLINE_TYPE_LABELS[d.action_type as DisciplineType]}</span>
+                            <Badge tone={DISCIPLINE_STATUS_TONE[d.status as DisciplineStatus]}>{DISCIPLINE_STATUS_LABELS[d.status as DisciplineStatus]}</Badge>
+                            <span className="text-[0.8125rem] text-fg-muted"><DisciplineSummary row={{ ...d, action_type: d.action_type as DisciplineType, status: d.status as DisciplineStatus }} /></span>
+                            <span className="ms-auto text-xs text-fg-subtle">{d.academic_years?.name}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </QueryState>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="enrollments" className="mt-4">
           <Card>

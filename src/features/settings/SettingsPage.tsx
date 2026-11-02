@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { CalendarRange, Flag, Pencil, Plus, Settings2, Star } from 'lucide-react';
+import { Archive, CalendarRange, Flag, Pencil, Plus, Settings2, Star } from 'lucide-react';
+import { Link } from 'react-router';
+import { CloseYearWizard } from './CloseYearWizard';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -126,6 +128,8 @@ function AcademicYears() {
   const years = useAcademicYears();
   const [dialog, setDialog] = React.useState<{ open: boolean; editing?: AcademicYear }>({ open: false });
   const [makeCurrent, setMakeCurrent] = React.useState<AcademicYear | null>(null);
+  const [closing, setClosing] = React.useState(false);
+  const hasCurrent = Boolean(years.data?.some((y) => y.is_current));
   const setCurrent = useMutation({
     mutationFn: async (id: string) => unwrap(await supabase.from('academic_years').update({ is_current: true, status: 'active' }).eq('id', id).select('id')),
     onSuccess: () => { void qc.invalidateQueries(); toast.success('تم تعيين العام الحالي'); setMakeCurrent(null); },
@@ -133,7 +137,18 @@ function AcademicYears() {
   });
   return (
     <Card>
-      <CardHeader icon={<CalendarRange />} title="الأعوام الدراسية" description="لا تتداخل الأعوام، ويوجد عام حالي واحد فقط." actions={<Button size="sm" onClick={() => setDialog({ open: true })}><Plus /> إضافة عام</Button>} />
+      <CardHeader
+        icon={<CalendarRange />}
+        title="الأعوام الدراسية"
+        description="لكل عام طلابه وسجلاته. الشاشات اليومية تعرض العام الحالي فقط، والأعوام المغلقة في الأرشيف."
+        actions={
+          <>
+            <Button size="sm" variant="secondary" asChild><Link to="/archive"><Archive /> الأرشيف</Link></Button>
+            <Button size="sm" variant="secondary" onClick={() => setDialog({ open: true })}><Plus /> إضافة عام</Button>
+            {hasCurrent && <Button size="sm" variant="danger" onClick={() => setClosing(true)}>إنهاء العام الدراسي</Button>}
+          </>
+        }
+      />
       {years.isPending ? <LoadingState rows={3} /> : years.isError ? <ErrorState error={years.error} onRetry={() => years.refetch()} /> : years.data.length === 0 ? <EmptyState title="لا توجد أعوام دراسية" /> : (
         <Table caption="الأعوام الدراسية">
           <THead><Tr><Th>العام</Th><Th>البداية</Th><Th>النهاية</Th><Th>الحالة</Th><Th><span className="sr-only">إجراءات</span></Th></Tr></THead>
@@ -153,6 +168,7 @@ function AcademicYears() {
         </Table>
       )}
       <YearDialog open={dialog.open} editing={dialog.editing} onOpenChange={(o) => setDialog({ open: o })} />
+      <CloseYearWizard open={closing} onOpenChange={setClosing} />
       <ConfirmDialog open={Boolean(makeCurrent)} onOpenChange={(o) => !o && setMakeCurrent(null)} title={`تعيين ${makeCurrent?.name ?? ''} عامًا حاليًا`} description="ستعتمد الشاشات الافتراضية (الفصول، الرصد، التقارير) على هذا العام." confirmLabel="تعيين" loading={setCurrent.isPending} onConfirm={() => setCurrent.mutate(makeCurrent!.id)} />
     </Card>
   );

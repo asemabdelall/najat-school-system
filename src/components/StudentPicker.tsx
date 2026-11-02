@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
+import { useYearScope } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import { useDebouncedValue } from '@/lib/hooks';
 import { controlClass } from '@/components/ui/input';
@@ -29,11 +30,13 @@ export function StudentPicker({ id, value, onChange, multiple = false, max = 20,
   const term = useDebouncedValue(text.trim(), 250);
   const listId = `${id}-list`;
 
+  // Only students enrolled in the current year: previous years' students stay in the archive.
+  const { yearId } = useYearScope();
   const results = useQuery({
-    queryKey: ['student-picker', term],
+    queryKey: ['student-picker', yearId, term],
     queryFn: async () =>
-      unwrap(await supabase.rpc('search_students', { p_search: term, p_status: 'active', p_limit: 8, p_offset: 0 })),
-    enabled: term.length >= 2,
+      unwrap(await supabase.rpc('search_students', { p_search: term, p_year_id: yearId!, p_status: 'active', p_limit: 8, p_offset: 0 })),
+    enabled: term.length >= 2 && Boolean(yearId),
   });
   const options = (results.data ?? []).filter((r) => !value.some((v) => v.id === r.id));
 

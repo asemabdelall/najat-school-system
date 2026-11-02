@@ -29,6 +29,10 @@ const FollowUpDetailPage = page(() => import('@/features/followups/FollowUpDetai
 const NotificationsPage = page(() => import('@/features/notifications/NotificationsPage'), 'NotificationsPage');
 const ReportsPage = page(() => import('@/features/reports/ReportsPage'), 'ReportsPage');
 const CareerPage = page(() => import('@/features/career/CareerPage'), 'CareerPage');
+const DisciplinePage = page(() => import('@/features/discipline/DisciplinePage'), 'DisciplinePage');
+const NewDisciplinePage = page(() => import('@/features/discipline/NewDisciplinePage'), 'NewDisciplinePage');
+const DisciplineDetailPage = page(() => import('@/features/discipline/DisciplineDetailPage'), 'DisciplineDetailPage');
+const ArchivePage = page(() => import('@/features/archive/ArchivePage'), 'ArchivePage');
 const UsersPage = page(() => import('@/features/users/UsersPage'), 'UsersPage');
 const SettingsPage = page(() => import('@/features/settings/SettingsPage'), 'SettingsPage');
 const AuditLogPage = page(() => import('@/features/audit/AuditLogPage'), 'AuditLogPage');
@@ -101,6 +105,15 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: 'discipline',
+            handle: { section: 'الجزاءات' },
+            children: [
+              { index: true, element: guarded('discipline.manage', <DisciplinePage />) },
+              { path: 'new', element: guarded('discipline.manage', <NewDisciplinePage />) },
+              { path: ':actionId', element: guarded('discipline.manage', <DisciplineDetailPage />) },
+            ],
+          },
+          {
             path: 'follow-ups',
             handle: { section: 'المتابعة' },
             children: [
@@ -113,6 +126,7 @@ const router = createBrowserRouter([
           { path: 'career', handle: { section: 'الميول المهنية' }, element: guarded('career.view', <CareerPage />) },
           { path: 'users', handle: { section: 'المستخدمون والصلاحيات' }, element: guarded('users.manage', <UsersPage />) },
           { path: 'settings', handle: { section: 'الإعدادات' }, element: guarded('settings.manage', <SettingsPage />) },
+          { path: 'archive', handle: { section: 'الأرشيف' }, element: guarded('archive.view', <ArchivePage />) },
           { path: 'audit', handle: { section: 'سجل التدقيق' }, element: guarded('audit.view', <AuditLogPage />) },
           { path: '*', element: <NotFoundPage /> },
         ],

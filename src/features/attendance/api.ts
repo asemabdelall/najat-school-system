@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { unwrap } from '@/lib/errors';
 import { sqlNull } from '@/lib/utils';
+import { useYearScope } from '@/lib/queries';
 import type { AttendanceMark, AttendanceStatus } from '@/lib/domain/attendance';
 
 export type MarkEntry = { status: AttendanceMark; minutes_late: number | null; note: string };
@@ -20,12 +21,15 @@ export function useSessionsForDate(date: string) {
 }
 
 export function useRecentSessions(opts: { from: string; to: string; classId: string | null; status: string | null; page: number; pageSize: number }) {
+  const { yearId } = useYearScope();
   return useQuery({
-    queryKey: ['attendance', 'recent', opts],
+    queryKey: ['attendance', 'recent', yearId, opts],
+    enabled: Boolean(yearId),
     queryFn: async () => {
       let q = supabase
         .from('attendance_sessions')
-        .select('id, class_id, session_date, period, status, submitted_at, submitted_late, reopened_at, school_classes(name), taker:profiles!attendance_sessions_taken_by_fkey(full_name), attendance_records(count)', { count: 'exact' })
+        .select('id, class_id, session_date, period, status, submitted_at, submitted_late, reopened_at, school_classes!inner(name, academic_year_id), taker:profiles!attendance_sessions_taken_by_fkey(full_name), attendance_records(count)', { count: 'exact' })
+        .eq('school_classes.academic_year_id', yearId!)
         .gte('session_date', opts.from)
         .lte('session_date', opts.to)
         .order('session_date', { ascending: false })

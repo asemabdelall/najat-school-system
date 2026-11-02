@@ -24,13 +24,13 @@ const CONCURRENCY = 4;
 
 type Result = { line: number; number: string; name: string; ok: boolean; message?: string };
 
-/** All existing student numbers (lower-case), paged past the 1000-row API cap. */
-async function existingNumbers(): Promise<Set<string>> {
-  const out = new Set<string>();
+/** All existing student numbers (lower-case) with their status, paged past the 1000-row API cap. */
+async function existingNumbers(): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase.from('students').select('student_number').range(from, from + 999);
+    const { data, error } = await supabase.from('students').select('student_number, status').range(from, from + 999);
     if (error) throw error;
-    data.forEach((s) => out.add(s.student_number.toLowerCase()));
+    data.forEach((s) => out.set(s.student_number.toLowerCase(), s.status));
     if (data.length < 1000) return out;
   }
 }
@@ -102,15 +102,23 @@ export function ImportStudentsPage() {
     const worker = async () => {
       for (let r = queue.shift(); r; r = queue.shift()) {
         const v = r.values;
-        const { error } = await supabase.rpc('create_student', {
-          p_student_number: v.student_number,
-          p_full_name: v.full_name,
-          p_date_of_birth: (v.date_of_birth || null) as string,
-          p_guardian_name: v.guardian_name,
-          p_guardian_phone: v.guardian_phone,
-          p_notes: v.notes,
-          p_class_id: r.classId as string,
-        });
+        const { error } = r.returning
+          ? await supabase.rpc('return_student', {
+              p_student_number: v.student_number,
+              p_full_name: v.full_name,
+              p_guardian_name: v.guardian_name,
+              p_guardian_phone: v.guardian_phone,
+              p_class_id: r.classId as string,
+            })
+          : await supabase.rpc('create_student', {
+              p_student_number: v.student_number,
+              p_full_name: v.full_name,
+              p_date_of_birth: (v.date_of_birth || null) as string,
+              p_guardian_name: v.guardian_name,
+              p_guardian_phone: v.guardian_phone,
+              p_notes: v.notes,
+              p_class_id: r.classId as string,
+            });
         out.push({ line: r.line, number: v.student_number, name: v.full_name, ok: !error, message: error ? errorMessage(error) : undefined });
         setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
@@ -293,7 +301,7 @@ export function ImportStudentsPage() {
                         <Td className="tabular">{r.values.date_of_birth || '—'}</Td>
                         <Td>
                           {r.errors.length === 0 ? (
-                            <Badge tone="success"><CheckCircle2 /> جاهز</Badge>
+                            r.returning ? <Badge tone="info"><RotateCcw /> عائد من عام سابق</Badge> : <Badge tone="success"><CheckCircle2 /> جاهز</Badge>
                           ) : (
                             <span className="flex flex-col gap-1">
                               {r.errors.map((e) => (

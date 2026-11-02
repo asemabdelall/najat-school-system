@@ -13,7 +13,9 @@ import { Pagination } from '@/components/ui/pagination';
 import { CompletionBadge } from '@/components/ui/status-badges';
 import { addDays, formatDate, formatNumber, formatWeekday, isSchoolDay, kuwaitToday, previousSchoolDay } from '@/lib/format';
 import { useClasses, useCurrentYear, useSchoolSettings } from '@/lib/queries';
-import { periodLabel, sessionCompletion, type AttendanceMode } from '@/lib/domain/attendance';
+import { COMPLETION_LABELS, periodLabel, sessionCompletion, type AttendanceMode } from '@/lib/domain/attendance';
+import { cn } from '@/lib/utils';
+import { COMPLETION_STYLE, CompletionLegend } from './PeriodStrip';
 import { useEnrollmentCounts } from '@/features/classes/api';
 import { useRecentSessions, useSessionsForDate } from './api';
 
@@ -79,36 +81,65 @@ export function AttendancePage() {
         ) : (classes.data ?? []).length === 0 ? (
           <EmptyState title={can('attendance.oversee') ? 'لا توجد فصول للعام الحالي' : 'لا توجد فصول مسندة إليك'} />
         ) : (
-          <Table caption="حالة رصد الفصول">
-            <THead>
-              <Tr>
-                <Th>الفصل</Th>
-                {periods.map((p) => <Th key={p}>{periodLabel(p)}</Th>)}
-              </Tr>
-            </THead>
-            <TBody>
-              {classes.data!.map((c) => (
-                <Tr key={c.id}>
-                  <Td className="font-semibold whitespace-nowrap">فصل {c.name}</Td>
-                  {periods.map((p) => {
-                    const s = byKey.get(`${c.id}|${p}`);
+          <div className="space-y-4 p-4">
+            {mode === 'period' && <CompletionLegend />}
+            <div className="overflow-x-auto">
+              <table className="w-full border-separate border-spacing-y-1.5 text-sm">
+                <caption className="sr-only">حالة رصد الفصول لكل حصة</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" className="px-2 text-start text-xs font-bold text-fg-muted">الفصل</th>
+                    {mode === 'period' && periods.map((p) => <th key={p} scope="col" className="px-1 text-center text-xs font-bold text-fg-muted">ح{formatNumber(p)}</th>)}
+                    <th scope="col" className="px-2 text-start text-xs font-bold text-fg-muted">{mode === 'period' ? 'المعتمد' : 'الحالة'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classes.data!.map((c) => {
                     const enrolled = counts.data?.get(c.id) ?? 0;
-                    const marked = countOf(s?.attendance_records);
-                    const state = sessionCompletion(enrolled, marked, s ? (s.status as 'draft' | 'submitted') : null);
+                    const states = periods.map((p) => {
+                      const s = byKey.get(`${c.id}|${p}`);
+                      return { p, s, state: sessionCompletion(enrolled, countOf(s?.attendance_records), s ? (s.status as 'draft' | 'submitted') : null) };
+                    });
+                    const done = states.filter((x) => x.state === 'submitted').length;
                     return (
-                      <Td key={p}>
-                        <Link to={`/attendance/take?class=${c.id}&date=${date}&period=${p}`} className="inline-flex flex-wrap items-center gap-2 rounded-md hover:underline" aria-label={`فتح رصد فصل ${c.name} ${periodLabel(p)}`}>
-                          <CompletionBadge state={state} />
-                          {s && state !== 'submitted' && <span className="tabular text-xs text-fg-muted">{formatNumber(marked)}/{formatNumber(enrolled)}</span>}
-                          {s?.submitted_late && <Badge tone="warning">متأخر</Badge>}
-                        </Link>
-                      </Td>
+                      <tr key={c.id}>
+                        <th scope="row" className="whitespace-nowrap rounded-s-lg bg-surface-sunken/60 px-3 py-2 text-start font-semibold">
+                          فصل {c.name}
+                          <span className="block text-xs font-normal text-fg-muted">{formatNumber(enrolled)} طالب</span>
+                        </th>
+                        {mode === 'period' ? states.map(({ p, s, state }) => {
+                          const st = COMPLETION_STYLE[state];
+                          const Icon = st.icon;
+                          return (
+                            <td key={p} className="bg-surface-sunken/60 px-1 py-2 text-center">
+                              <Link
+                                to={`/attendance/take?class=${c.id}&date=${date}&period=${p}`}
+                                className={cn('mx-auto grid size-10 place-items-center rounded-lg border transition-transform hover:scale-105', st.cell)}
+                                aria-label={`فصل ${c.name} ${periodLabel(p)}: ${COMPLETION_LABELS[state]}`}
+                                title={`${periodLabel(p)}: ${COMPLETION_LABELS[state]}${s?.submitted_late ? ' (متأخر)' : ''}`}
+                              >
+                                <Icon className="size-4" aria-hidden />
+                              </Link>
+                            </td>
+                          );
+                        }) : null}
+                        <td className="rounded-e-lg bg-surface-sunken/60 px-3 py-2">
+                          {mode === 'period' ? (
+                            <span className="flex items-center gap-2">
+                              <span className="h-1.5 w-20 overflow-hidden rounded-full bg-surface" aria-hidden><span className="block h-full rounded-full bg-success" style={{ width: `${(done / periods.length) * 100}%` }} /></span>
+                              <span className="tabular text-xs font-semibold text-fg-muted">{formatNumber(done)}/{formatNumber(periods.length)}</span>
+                            </span>
+                          ) : (
+                            <Link to={`/attendance/take?class=${c.id}&date=${date}&period=0`} className="inline-flex"><CompletionBadge state={states[0].state} /></Link>
+                          )}
+                        </td>
+                      </tr>
                     );
                   })}
-                </Tr>
-              ))}
-            </TBody>
-          </Table>
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </Card>
 

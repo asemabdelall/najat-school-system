@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ExcuseStatusBadge } from '@/components/ui/status-badges';
 import { StudentPicker, type PickedStudent } from '@/components/StudentPicker';
 import { supabase } from '@/lib/supabase';
+import { useYearScope } from '@/lib/queries';
 import { errorMessage, unwrap } from '@/lib/errors';
 import { formatDate, formatNumber, kuwaitToday } from '@/lib/format';
 import { EXCUSE_REASON_LABELS, EXCUSE_STATUS_LABELS, type ExcuseStatus } from '@/lib/domain/attendance';
@@ -91,12 +92,15 @@ export function ExcusesPage() {
   const [newOpen, setNewOpen] = React.useState(false);
   const [review, setReview] = React.useState<{ id: string; decision: 'approved' | 'rejected' } | null>(null);
 
+  const { yearId } = useYearScope();
   const excuses = useQuery({
-    queryKey: ['excuses', status],
+    queryKey: ['excuses', yearId, status],
+    enabled: Boolean(yearId),
     queryFn: async () => {
       let q = supabase
         .from('absence_excuses')
         .select('*, students(full_name, student_number), submitter:profiles!absence_excuses_submitted_by_fkey(full_name), reviewer:profiles!absence_excuses_reviewed_by_fkey(full_name)')
+        .eq('academic_year_id', yearId!)
         .order('created_at', { ascending: false })
         .limit(100);
       if (status) q = q.eq('status', status);

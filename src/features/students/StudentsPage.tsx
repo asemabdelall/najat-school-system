@@ -36,10 +36,12 @@ export function StudentsPage() {
 
   const filters = {
     search: debounced,
-    yearId,
+    // Default view: students enrolled in the current year (older years via the year filter / archive).
+    yearId: effectiveYear,
     classId: params.get('class'),
     grade: params.get('grade') ? Number(params.get('grade')) : null,
-    status: params.has('status') ? params.get('status') || null : 'active',
+    // Past years' students are graduated/archived, so a past year defaults to every status.
+    status: params.has('status') ? params.get('status') || null : yearId ? null : 'active',
     page: Math.max(1, Number(params.get('page') ?? 1)),
   };
   const query = useStudentSearch(filters);
@@ -116,7 +118,7 @@ export function StudentsPage() {
                 </option>
               ))}
           </Select>
-          <Select aria-label="حالة الطالب" value={params.has('status') ? (params.get('status') ?? '') : 'active'} onChange={(e) => update('status', e.target.value)}>
+          <Select aria-label="حالة الطالب" value={params.has('status') ? (params.get('status') ?? '') : yearId ? '' : 'active'} onChange={(e) => update('status', e.target.value)}>
             <option value="">كل الحالات</option>
             {Object.entries(STUDENT_STATUS_LABELS).map(([k, v]) => (
               <option key={k} value={k}>

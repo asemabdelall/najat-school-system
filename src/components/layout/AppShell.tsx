@@ -4,7 +4,7 @@ import { Dialog as D } from 'radix-ui';
 import { AnimatePresence, m, useDragControls } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  BarChart3, Bell, CalendarCheck2, Compass, Flag, History, KeyRound, LayoutDashboard, ListChecks, LogOut, Menu, Moon, MoreHorizontal, School, Settings,
+  Archive, BarChart3, Bell, CalendarCheck2, Compass, Flag, Gavel, History, KeyRound, LayoutDashboard, ListChecks, LogOut, Menu, Moon, MoreHorizontal, School, Settings,
   Sun, UserCog, UserRound, Users, WifiOff, X,
 } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
@@ -37,6 +37,7 @@ export const NAV: NavGroup[] = [
       { to: '/classes', label: 'الصفوف والفصول', short: 'الفصول', icon: School, permission: 'classes.view' },
       { to: '/attendance', label: 'الحضور والغياب', short: 'الحضور', icon: CalendarCheck2, permission: 'attendance.take' },
       { to: '/behavior', label: 'السلوك الطلابي', short: 'السلوك', icon: Flag, permission: 'behavior.report' },
+      { to: '/discipline', label: 'الجزاءات', icon: Gavel, permission: 'discipline.manage' },
       { to: '/follow-ups', label: 'المتابعة', icon: ListChecks, permission: 'followups.view' },
     ],
   },
@@ -53,6 +54,7 @@ export const NAV: NavGroup[] = [
     items: [
       { to: '/users', label: 'المستخدمون والصلاحيات', icon: UserCog, permission: 'users.manage' },
       { to: '/settings', label: 'الإعدادات', icon: Settings, permission: 'settings.manage' },
+      { to: '/archive', label: 'الأرشيف', icon: Archive, permission: 'archive.view' },
       { to: '/audit', label: 'سجل التدقيق', icon: History, permission: 'audit.view' },
     ],
   },
