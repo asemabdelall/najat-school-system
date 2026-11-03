@@ -65,7 +65,7 @@ export function useClasses(yearId?: string | null, opts: { includeArchived?: boo
   });
 }
 
-export type StaffMember = { id: string; full_name: string; email: string | null; is_active: boolean; roles: Role[] };
+export type StaffMember = { id: string; full_name: string; email: string | null; job_title: string | null; is_active: boolean; roles: Role[] };
 
 /** Active staff with their roles (for assignment pickers). */
 export function useStaff() {
@@ -73,7 +73,7 @@ export function useStaff() {
     queryKey: qk.staff,
     queryFn: async (): Promise<StaffMember[]> => {
       const [profiles, roles] = await Promise.all([
-        supabase.from('profiles').select('id, full_name, email, is_active').order('full_name'),
+        supabase.from('profiles').select('id, full_name, email, job_title, is_active').order('full_name'),
         supabase.from('user_roles').select('user_id, role'),
       ]);
       const p = unwrap(profiles);

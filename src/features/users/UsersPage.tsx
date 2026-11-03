@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { KeyRound, MoreVertical, Plus, Search, ShieldMinus, ShieldPlus, UserCheck, UserCog, UserX } from 'lucide-react';
+import { BriefcaseBusiness, KeyRound, MoreVertical, Plus, Search, ShieldMinus, ShieldPlus, UserCheck, UserCog, UserX } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -39,12 +39,19 @@ const passwordOk = (p: string) => p.length >= 10 && /[A-Za-z]/.test(p) && /\d/.t
 
 function CreateUserDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const qc = useQueryClient();
-  const [v, setV] = React.useState({ full_name: '', email: '', password: '', roles: ['teacher'] as Role[] });
+  const [v, setV] = React.useState({ full_name: '', email: '', password: '', job_title: '', roles: ['teacher'] as Role[] });
   const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {
-    if (open) { setV({ full_name: '', email: '', password: '', roles: ['teacher'] }); setError(null); }
+    if (open) { setV({ full_name: '', email: '', password: '', job_title: '', roles: ['teacher'] }); setError(null); }
   }, [open]);
-  const create = useMutation({ mutationFn: () => adminUsers({ action: 'create', ...v }), onSuccess: () => void qc.invalidateQueries({ queryKey: qk.staff }) });
+  const create = useMutation({
+    mutationFn: async () => {
+      const { job_title, ...account } = v;
+      const res = (await adminUsers({ action: 'create', ...account })) as { id?: string } | null;
+      if (res?.id && job_title.trim()) unwrap(await supabase.from('profiles').update({ job_title: job_title.trim() }).eq('id', res.id).select('id'));
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: qk.staff }),
+  });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title="إضافة مستخدم" description="يُنشأ الحساب مفعّلًا. سلّم كلمة المرور المؤقتة للموظف عبر قناة آمنة؛ سيُطلب منه تعيين كلمة مرور خاصة به عند أول دخول." size="md">
@@ -67,6 +74,7 @@ function CreateUserDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           }}
         >
           <Field label="الاسم الكامل" htmlFor="u-name" required><Input value={v.full_name} onChange={(e) => setV({ ...v, full_name: e.target.value })} /></Field>
+          <Field label="المسمى الوظيفي" htmlFor="u-title" hint="مثال: أخصائي اجتماعي، مشرف تربوي، معلم رياضيات. لا يغيّر الصلاحيات."><Input value={v.job_title} maxLength={60} onChange={(e) => setV({ ...v, job_title: e.target.value })} /></Field>
           <Field label="البريد الإلكتروني" htmlFor="u-email" required><Input type="email" dir="ltr" className="text-start" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} /></Field>
           <Field label="كلمة مرور مؤقتة" htmlFor="u-pass" required hint="١٠ أحرف على الأقل، حروف وأرقام."><Input type="text" dir="ltr" className="text-start" autoComplete="new-password" value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} /></Field>
           <fieldset>
@@ -104,6 +112,16 @@ export function UsersPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [pending, setPending] = React.useState<Pending | null>(null);
   const [newPassword, setNewPassword] = React.useState('');
+  const [titleUser, setTitleUser] = React.useState<StaffMember | null>(null);
+  const [title, setTitle] = React.useState('');
+  const saveTitle = useMutation({
+    mutationFn: async () => {
+      const rows = unwrap(await supabase.from('profiles').update({ job_title: title.trim() || null }).eq('id', titleUser!.id).select('id'));
+      if (!rows.length) throw { code: '42501' };
+    },
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: qk.staff }); toast.success('تم حفظ المسمى الوظيفي'); setTitleUser(null); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
 
   const act = useMutation({
     mutationFn: async (p: Pending) => {
@@ -147,7 +165,10 @@ export function UsersPage() {
                 const self = u.id === profile?.id;
                 return (
                   <Tr key={u.id}>
-                    <Td className="font-semibold">{u.full_name}{self && <span className="ms-1 text-xs font-normal text-fg-muted">(أنت)</span>}</Td>
+                    <Td>
+                      <p className="font-semibold">{u.full_name}{self && <span className="ms-1 text-xs font-normal text-fg-muted">(أنت)</span>}</p>
+                      {u.job_title && <p className="text-xs text-fg-muted">{u.job_title}</p>}
+                    </Td>
                     <Td className="hidden text-fg-muted md:table-cell"><span className="ltr">{u.email}</span></Td>
                     <Td><div className="flex flex-wrap gap-1">{u.roles.length ? u.roles.map((r) => <RoleBadge key={r} role={r} />) : <Badge tone="outline">بلا صلاحيات</Badge>}</div></Td>
                     <Td>{u.is_active ? <Badge tone="success"><UserCheck aria-hidden /> مفعّل</Badge> : <Badge tone="neutral"><UserX aria-hidden /> معطّل</Badge>}</Td>
@@ -155,6 +176,8 @@ export function UsersPage() {
                       <DropdownMenu dir="rtl">
                         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label={`إجراءات ${u.full_name}`}><MoreVertical /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent>
+                          <DropdownMenuItem onSelect={() => { setTitle(u.job_title ?? ''); setTitleUser(u); }}><BriefcaseBusiness /> تعديل المسمى الوظيفي</DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           {ROLES.filter((r) => !u.roles.includes(r)).map((r) => (
                             <DropdownMenuItem key={`g-${r}`} onSelect={() => setPending({ kind: 'grant', user: u, role: r })}><ShieldPlus /> منح صلاحية {ROLE_LABELS[r]}</DropdownMenuItem>
                           ))}
@@ -184,6 +207,14 @@ export function UsersPage() {
       </Card>
 
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <Dialog open={Boolean(titleUser)} onOpenChange={(o) => !o && setTitleUser(null)}>
+        <DialogContent title={`المسمى الوظيفي — ${titleUser?.full_name ?? ''}`} description="وصف للوظيفة فقط، ولا يغيّر الصلاحيات." size="sm">
+          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (title.trim() && title.trim().length < 2) return toast.error('المسمى قصير جدًا'); saveTitle.mutate(); }}>
+            <Field label="المسمى الوظيفي" htmlFor="t-title" hint="اتركه فارغًا لإزالته."><Input value={title} maxLength={60} onChange={(e) => setTitle(e.target.value)} /></Field>
+            <DialogFooter><Button variant="secondary" onClick={() => setTitleUser(null)}>إلغاء</Button><Button type="submit" loading={saveTitle.isPending}>حفظ</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <ConfirmDialog
         open={Boolean(pending)}
         onOpenChange={(o) => !o && setPending(null)}

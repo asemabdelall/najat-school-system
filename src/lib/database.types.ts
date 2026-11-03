@@ -483,14 +483,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"email": string | null,"full_name": string,"id": string,"is_active": boolean,"must_change_password": boolean,"phone": string | null,"updated_at": string
+                    "created_at": string,"email": string | null,"full_name": string,"id": string,"is_active": boolean,"job_title": string | null,"must_change_password": boolean,"phone": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"email"?: string | null,"full_name": string,"id": string,"is_active"?: boolean,"must_change_password"?: boolean,"phone"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"email"?: string | null,"full_name": string,"id": string,"is_active"?: boolean,"job_title"?: string | null,"must_change_password"?: boolean,"phone"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"email"?: string | null,"full_name"?: string,"id"?: string,"is_active"?: boolean,"must_change_password"?: boolean,"phone"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"email"?: string | null,"full_name"?: string,"id"?: string,"is_active"?: boolean,"job_title"?: string | null,"must_change_password"?: boolean,"phone"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
