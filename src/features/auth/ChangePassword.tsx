@@ -51,7 +51,9 @@ function updateError(e: unknown): string {
  * user has just proven it by signing in, so it is not asked again.
  */
 export function ChangePasswordForm({ requireCurrent, onDone }: { requireCurrent: boolean; onDone: () => void }) {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, session, refreshProfile } = useAuth();
+  // Student portal accounts have no staff profile: use the signed-in email.
+  const email = profile?.email ?? session?.user.email ?? '';
   const [error, setError] = React.useState<string | null>(null);
   const form = useForm<Values>({ resolver: zodResolver(schema(requireCurrent)), defaultValues: { current: '', password: '', confirm: '' } });
   const errs = form.formState.errors;
@@ -59,7 +61,7 @@ export function ChangePasswordForm({ requireCurrent, onDone }: { requireCurrent:
   const submit = form.handleSubmit(async (v) => {
     setError(null);
     if (requireCurrent) {
-      const check = await supabase.auth.signInWithPassword({ email: profile?.email ?? '', password: v.current });
+      const check = await supabase.auth.signInWithPassword({ email, password: v.current });
       if (check.error) {
         setError('كلمة المرور الحالية غير صحيحة.');
         return;
@@ -100,7 +102,7 @@ export function ChangePasswordForm({ requireCurrent, onDone }: { requireCurrent:
         )}
       </AnimatePresence>
       {/* Hidden username keeps password managers pointed at the right account. */}
-      <input type="email" name="username" autoComplete="username" value={profile?.email ?? ''} readOnly hidden />
+      <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />
       {requireCurrent && (
         <Field label="كلمة المرور الحالية" htmlFor="pw-current" required error={errs.current?.message}>
           <Input type="password" autoComplete="current-password" dir="ltr" className="text-start" {...form.register('current')} />

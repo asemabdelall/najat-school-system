@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { createBrowserRouter, Outlet, RouterProvider } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoadingState } from '@/components/ui/states';
 import { RequireAuth, RequirePermission, RequireStudent } from '@/auth/guards';
@@ -33,7 +33,12 @@ const DisciplinePage = page(() => import('@/features/discipline/DisciplinePage')
 const NewDisciplinePage = page(() => import('@/features/discipline/NewDisciplinePage'), 'NewDisciplinePage');
 const DisciplineDetailPage = page(() => import('@/features/discipline/DisciplineDetailPage'), 'DisciplineDetailPage');
 const ArchivePage = page(() => import('@/features/archive/ArchivePage'), 'ArchivePage');
-const PortalPage = page(() => import('@/features/portal/PortalPage'), 'PortalPage');
+const PortalShell = page(() => import('@/features/portal/PortalShell'), 'PortalShell');
+const PortalHome = page(() => import('@/features/portal/PortalHome'), 'PortalHome');
+const PortalAttendance = page(() => import('@/features/portal/PortalAttendance'), 'PortalAttendance');
+const PortalBehavior = page(() => import('@/features/portal/PortalRecords'), 'PortalBehavior');
+const PortalActions = page(() => import('@/features/portal/PortalRecords'), 'PortalActions');
+const PortalProfile = page(() => import('@/features/portal/PortalProfile'), 'PortalProfile');
 const StudentAccountsPage = page(() => import('@/features/portal/StudentAccountsPage'), 'StudentAccountsPage');
 const UsersPage = page(() => import('@/features/users/UsersPage'), 'UsersPage');
 const SettingsPage = page(() => import('@/features/settings/SettingsPage'), 'SettingsPage');
@@ -55,11 +60,19 @@ const router = createBrowserRouter([
     element: (
       <RequireStudent>
         <Suspense fallback={null}>
-          <PortalPage />
+          <PortalShell />
         </Suspense>
       </RequireStudent>
     ),
     errorElement: <RouteErrorBoundary />,
+    children: [
+      { index: true, handle: { title: 'الرئيسية' }, element: <Suspense fallback={null}><PortalHome /></Suspense> },
+      { path: 'attendance', handle: { title: 'الحضور والغياب' }, element: <Suspense fallback={null}><PortalAttendance /></Suspense> },
+      { path: 'behavior', handle: { title: 'السلوك' }, element: <Suspense fallback={null}><PortalBehavior /></Suspense> },
+      { path: 'actions', handle: { title: 'الإجراءات والجزاءات' }, element: <Suspense fallback={null}><PortalActions /></Suspense> },
+      { path: 'profile', handle: { title: 'الملف والتقرير' }, element: <Suspense fallback={null}><PortalProfile /></Suspense> },
+      { path: '*', element: <Navigate to="/portal" replace /> },
+    ],
   },
   {
     path: '/welcome',
