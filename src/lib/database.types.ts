@@ -2,7 +2,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  
+
   "public": {
           Tables: {
             "absence_excuses": {
@@ -55,7 +55,7 @@ isOneToOne: false
                     "created_at"?: string,"ends_on"?: string,"id"?: string,"is_current"?: boolean,"name"?: string,"starts_on"?: string,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
-                    
+
                   ]
                 },"attendance_corrections": {
                   Row: {
@@ -197,7 +197,7 @@ isOneToOne: false
                     "created_at"?: string,"default_severity"?: string,"description"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"sort_order"?: number,"updated_at"?: string
                   }
                   Relationships: [
-                    
+
                   ]
                 },"behavior_incidents": {
                   Row: {
@@ -493,7 +493,7 @@ isOneToOne: false
                     "created_at"?: string,"email"?: string | null,"full_name"?: string,"id"?: string,"is_active"?: boolean,"job_title"?: string | null,"must_change_password"?: boolean,"phone"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
-                    
+
                   ]
                 },"school_classes": {
                   Row: {
@@ -527,7 +527,27 @@ isOneToOne: false
                     "attendance_mode"?: string,"follow_up_due_soon_days"?: number,"id"?: number,"periods_per_day"?: number,"school_name_ar"?: string,"school_name_en"?: string,"teacher_backdate_days"?: number,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
-                    
+
+                  ]
+                },"student_accounts": {
+                  Row: {
+                    "created_at": string,"student_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"student_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"student_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "student_accounts_student_id_fkey"
+      columns: ["student_id"]
+isOneToOne: true
+      referencedRelation: "students"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"students": {
                   Row: {
@@ -541,7 +561,7 @@ isOneToOne: false
                     "civil_id"?: string | null,"created_at"?: string,"date_of_birth"?: string | null,"full_name"?: string,"guardian_name"?: string | null,"guardian_phone"?: string | null,"id"?: string,"notes"?: string | null,"status"?: string,"student_number"?: string,"updated_at"?: string
                   }
                   Relationships: [
-                    
+
                   ]
                 },"teacher_class_assignments": {
                   Row: {
@@ -724,6 +744,19 @@ isOneToOne: false
 "password_changed":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"portal_accounts":
+{ Args: { "p_class_id": string }; Returns: {
+              "civil_id": string,"email": string,"full_name": string,"has_account": boolean,"last_sign_in_at": string,"student_id": string,"student_number": string
+            }[]
+                           },
+"portal_my_data":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"portal_set_accounts":
+{ Args: { "p_password": string,"p_student_ids": (string)[] }; Returns: {
+              "created": boolean,"email": string,"student_id": string
+            }[]
+                           },
 "quiz_find_student":
 { Args: { "p_civil_id": string }; Returns: {
               "class_name": string,"full_name": string,"grade_level": number,"section": string
@@ -759,6 +792,9 @@ isOneToOne: false
                            },
 "set_student_status":
 { Args: { "p_reason"?: string,"p_status": string,"p_student_id": string }; Returns: undefined
+                           },
+"student_portal_email":
+{ Args: { "p_civil_id": string }; Returns: string
                            },
 "submit_incident":
 { Args: { "p_category_id": string,"p_description": string,"p_incident_date": string,"p_location": string,"p_severity": string,"p_student_ids": (string)[] }; Returns: string
@@ -896,7 +932,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            
+
           }
         }
 } as const

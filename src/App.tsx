@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Outlet, RouterProvider } from 'react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoadingState } from '@/components/ui/states';
-import { RequireAuth, RequirePermission } from '@/auth/guards';
+import { RequireAuth, RequirePermission, RequireStudent } from '@/auth/guards';
 import type { Permission } from '@/lib/domain/permissions';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { NotFoundPage } from '@/features/errors/ErrorPages';
@@ -33,6 +33,8 @@ const DisciplinePage = page(() => import('@/features/discipline/DisciplinePage')
 const NewDisciplinePage = page(() => import('@/features/discipline/NewDisciplinePage'), 'NewDisciplinePage');
 const DisciplineDetailPage = page(() => import('@/features/discipline/DisciplineDetailPage'), 'DisciplineDetailPage');
 const ArchivePage = page(() => import('@/features/archive/ArchivePage'), 'ArchivePage');
+const PortalPage = page(() => import('@/features/portal/PortalPage'), 'PortalPage');
+const StudentAccountsPage = page(() => import('@/features/portal/StudentAccountsPage'), 'StudentAccountsPage');
 const UsersPage = page(() => import('@/features/users/UsersPage'), 'UsersPage');
 const SettingsPage = page(() => import('@/features/settings/SettingsPage'), 'SettingsPage');
 const AuditLogPage = page(() => import('@/features/audit/AuditLogPage'), 'AuditLogPage');
@@ -47,6 +49,18 @@ function guarded(permission: Permission, element: ReactNode) {
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorBoundary /> },
+  {
+    // Guardian & student portal: student accounts sign in on the same login page.
+    path: '/portal',
+    element: (
+      <RequireStudent>
+        <Suspense fallback={null}>
+          <PortalPage />
+        </Suspense>
+      </RequireStudent>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
   {
     path: '/welcome',
     element: (
@@ -75,6 +89,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: guarded('students.view', <StudentsPage />) },
               { path: 'import', element: guarded('students.manage', <ImportStudentsPage />) },
+              { path: 'accounts', element: guarded('students.manage', <StudentAccountsPage />) },
               { path: ':studentId', element: guarded('students.view', <StudentDetailPage />) },
             ],
           },
