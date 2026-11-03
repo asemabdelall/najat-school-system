@@ -19,6 +19,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     // an explicit sign-out (the next person at this computer may be someone else).
     return <Navigate to="/login" replace state={auth.sessionExpired ? { from: location.pathname + location.search } : null} />;
   }
+  // Guardian/student accounts have their own page and nothing else.
+  if (auth.isStudent) return <Navigate to="/portal" replace />;
   // An admin-set temporary password must be replaced before anything else.
   if (auth.profile?.must_change_password && !auth.inactive) return <ForcePasswordChangePage />;
   return <>{children}</>;
@@ -28,5 +30,14 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 export function RequirePermission({ permission, children }: { permission: Permission; children: ReactNode }) {
   const auth = useAuth();
   if (!auth.can(permission)) return <UnauthorizedPage />;
+  return <>{children}</>;
+}
+
+/** The guardian & student portal: student accounts only. Staff go to the system. */
+export function RequireStudent({ children }: { children: ReactNode }) {
+  const auth = useAuth();
+  if (auth.status === 'loading') return <FullPageLoader />;
+  if (auth.status === 'signed_out') return <Navigate to="/login" replace />;
+  if (!auth.isStudent) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

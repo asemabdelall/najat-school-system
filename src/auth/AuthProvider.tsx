@@ -13,8 +13,14 @@ type AuthState = {
   roles: Role[];
   /** True when the account exists but has no active role (deactivated). */
   inactive: boolean;
+  /**
+   * A guardian/student portal account (app_metadata.portal = 'student', set
+   * only by the server). It sees the portal page only; the database gives it
+   * nothing else.
+   */
+  isStudent: boolean;
   sessionExpired: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ student: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   can: (p: Permission) => boolean;
@@ -23,6 +29,8 @@ type AuthState = {
 };
 
 const AuthContext = React.createContext<AuthState | null>(null);
+
+const isStudentSession = (s: Session | null) => s?.user.app_metadata?.portal === 'student';
 
 async function loadIdentity(userId: string) {
   const [profileRes, rolesRes] = await Promise.all([
@@ -94,20 +102,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [applySession, queryClient]);
 
   const value = React.useMemo<AuthState>(() => {
-    const active = Boolean(profile?.is_active) && roles.length > 0;
+    const isStudent = status === 'signed_in' && isStudentSession(session);
+    const active = !isStudent && Boolean(profile?.is_active) && roles.length > 0;
     const effectiveRoles = active ? roles : [];
     return {
       status,
       session,
       profile,
       roles: effectiveRoles,
-      inactive: status === 'signed_in' && !active,
+      inactive: status === 'signed_in' && !isStudent && !active,
+      isStudent,
       sessionExpired,
       async signIn(email, password) {
         setSessionExpired(false);
         const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         await applySession(data.session);
+        return { student: isStudentSession(data.session) };
       },
       async signOut() {
         explicitSignOut.current = true;

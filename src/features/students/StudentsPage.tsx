@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { Search, Upload, UserPlus, Users, X } from 'lucide-react';
+import { Search, Upload, UserPlus, Users, X, KeyRound } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,11 @@ export function StudentsPage() {
         actions={
           can('students.manage') && (
             <>
+              <Button variant="secondary" asChild>
+                <Link to="/students/accounts">
+                  <KeyRound /> حسابات الطلاب (البوابة)
+                </Link>
+              </Button>
               <Button variant="secondary" asChild>
                 <Link to="/students/import">
                   <Upload /> استيراد من ملف

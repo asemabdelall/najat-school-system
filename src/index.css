@@ -345,7 +345,8 @@
     color: #000;
     font-size: 11pt;
   }
-  .no-print {
+  .no-print,
+  [data-sonner-toaster] {
     display: none !important;
   }
   .print-only {

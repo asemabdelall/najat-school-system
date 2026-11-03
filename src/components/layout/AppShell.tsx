@@ -453,7 +453,7 @@ export function AppShell() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr] print:!block">
       <a href="#main" className="sr-only z-50 rounded-md bg-brand px-4 py-2 text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4">
         تخطَّ إلى المحتوى
       </a>

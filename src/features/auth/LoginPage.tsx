@@ -4,7 +4,7 @@ import { AnimatePresence, m, useAnimationControls } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, ArrowRight, CalendarCheck2, Eye, EyeOff, Flag, ListChecks, LogIn } from 'lucide-react';
+import { AlertCircle, ArrowRight, CalendarCheck2, Eye, EyeOff, Flag, GraduationCap, ListChecks, LogIn } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { errorMessage } from '@/lib/errors';
 import { supabaseConfigured } from '@/lib/supabase';
@@ -14,6 +14,15 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/layout/Logo';
 import { EASE_OUT, spring } from '@/lib/motion';
+import { digitsOnly } from '@/lib/domain/portal';
+
+/** Student / guardian accounts: s + civil ID @alnajat.edu.kw. A bare civil ID is accepted too. */
+const STUDENT_DOMAIN = 'alnajat.edu.kw';
+function loginEmail(value: string) {
+  const v = value.trim();
+  const civil = digitsOnly(v);
+  return !v.includes('@') && civil.length === 12 ? `s${civil}@${STUDENT_DOMAIN}` : v;
+}
 
 const rise = (delay: number) => ({
   initial: { opacity: 0, y: 18 },
@@ -49,7 +58,11 @@ const FEATURES = [
 ];
 
 const schema = z.object({
-  email: z.string().trim().min(1, 'البريد الإلكتروني مطلوب').email('صيغة البريد الإلكتروني غير صحيحة'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'البريد الإلكتروني مطلوب')
+    .refine((v) => z.string().email().safeParse(loginEmail(v)).success, 'صيغة البريد الإلكتروني غير صحيحة'),
   password: z.string().min(1, 'كلمة المرور مطلوبة'),
 });
 type FormValues = z.infer<typeof schema>;
@@ -65,13 +78,13 @@ export function LoginPage() {
   const [attempt, setAttempt] = React.useState(0);
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '' } });
 
-  if (auth.status === 'signed_in' && !auth.inactive) return <Navigate to={from} replace />;
+  if (auth.status === 'signed_in' && !auth.inactive) return <Navigate to={auth.isStudent ? '/portal' : from} replace />;
 
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
     try {
-      await auth.signIn(values.email, values.password);
-      navigate(from, { replace: true });
+      const { student } = await auth.signIn(loginEmail(values.email), values.password);
+      navigate(student ? '/portal' : from, { replace: true });
     } catch (e) {
       setServerError(errorMessage(e));
       setAttempt((n) => n + 1);
@@ -101,7 +114,7 @@ export function LoginPage() {
               نظام الإدارة المدرسية
             </m.h1>
             <m.p className="mt-1 text-sm text-fg-muted" {...rise(0.42)}>
-              سجّل الدخول بحسابك الوظيفي للمتابعة
+              سجّل الدخول بحسابك للمتابعة
             </m.p>
           </div>
 
@@ -139,7 +152,7 @@ export function LoginPage() {
             <form onSubmit={onSubmit} noValidate className="space-y-4">
               <m.div {...rise(0.6)}>
                 <Field label="البريد الإلكتروني" htmlFor="email" error={form.formState.errors.email?.message}>
-                  <Input type="email" autoComplete="username" dir="ltr" className="text-start" placeholder="name@najat.edu.kw" {...form.register('email')} />
+                  <Input type="text" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} dir="ltr" className="text-start" placeholder="name@alnajat.edu.kw" {...form.register('email')} />
                 </Field>
               </m.div>
               <m.div {...rise(0.68)}>
@@ -187,7 +200,22 @@ export function LoginPage() {
               لا يوجد تسجيل ذاتي. تُنشأ الحسابات من قبل إدارة النظام فقط.
             </m.p>
           </m.div>
-          <m.div className="web-only mt-6 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
+          <m.div
+            className="mt-5 flex items-start gap-3 rounded-xl border border-line bg-surface p-4 text-sm shadow-xs"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.95 }}
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand dark:text-link"><GraduationCap className="size-[18px]" aria-hidden /></span>
+            <div className="min-w-0">
+              <p className="font-bold text-fg-strong">الطلاب وأولياء الأمور</p>
+              <p className="mt-0.5 leading-relaxed text-fg-muted">
+                البريد هو حرف <span dir="ltr" className="font-semibold text-fg">s</span> ثم الرقم المدني للطالب، مثل{' '}
+                <span dir="ltr" className="inline-block break-all font-semibold text-fg">s123456789012@{STUDENT_DOMAIN}</span>
+              </p>
+            </div>
+          </m.div>
+          <m.div className="web-only mt-4 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
             <Link to="/welcome" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-link hover:underline">
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden /> التعرّف على النظام
             </Link>
