@@ -132,7 +132,7 @@ function RecentDays({ d }: { d: PortalData }) {
     return out;
   }, [today]);
   return (
-    <Panel title="آخر ١٠ أيام دراسية" subtitle="كل يوم بلونه، اضغط لعرض التفاصيل في صفحة الحضور" icon={CalendarDays} action={{ to: '/portal/attendance', label: 'التقويم الكامل' }}>
+    <Panel title="آخر 10 أيام دراسية" subtitle="كل يوم بلونه، اضغط لعرض التفاصيل في صفحة الحضور" icon={CalendarDays} action={{ to: '/portal/attendance', label: 'التقويم الكامل' }}>
       <ol className="grid grid-cols-5 gap-2 sm:grid-cols-10">
         {days.map((date, i) => {
           const kind = dayKind(byDay.get(date), recorded.has(date), per);

@@ -19,8 +19,8 @@ export function Field({ label, htmlFor, error, hint, required, className, noClon
   const errorId = error ? `${htmlFor}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={htmlFor} className="text-[0.8125rem] font-semibold text-fg">
+    <div className={cn('flex flex-col gap-2', className)}>
+      <label htmlFor={htmlFor} className="text-sm font-bold text-fg-strong">
         {label}
         {required && (
           <span className="ms-0.5 text-danger" aria-hidden>
@@ -30,12 +30,12 @@ export function Field({ label, htmlFor, error, hint, required, className, noClon
       </label>
       {noClone ? children : React.cloneElement(children, { id: htmlFor, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy })}
       {hint && !error && (
-        <p id={hintId} className="text-xs text-fg-muted">
+        <p id={hintId} className="text-xs leading-relaxed text-fg-muted">
           {hint}
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="text-xs font-semibold text-danger">
+        <p id={errorId} role="alert" className="text-xs font-bold text-danger">
           {error}
         </p>
       )}

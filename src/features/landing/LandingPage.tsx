@@ -181,7 +181,7 @@ export function LandingPage() {
         <section id="attendance" className="lp-ch lp-ch-navy" aria-labelledby="h-att">
           <div className="lp-wrap lp-grid">
             <div className="lp-att-text">
-              <Lines id="h-att" lines={['الحصة الأولى، ٧:٣٠']} />
+              <Lines id="h-att" lines={['الحصة الأولى، 7:30']} />
               <Reveal i={1} as="p" className="lp-body">
                 يفتح المعلم فصله من الجوال ويرصد طالبًا طالبًا، أو يحدد الباقين حاضرين بضغطة. يُحفظ الكشف مسودة إن انقطع، ويُعتمد حين يكتمل.
               </Reveal>
@@ -210,7 +210,7 @@ export function LandingPage() {
         <section id="behavior" className="lp-ch lp-ch-green" aria-labelledby="h-beh">
           <div className="lp-wrap">
             <div className="lp-grid lp-beh-head">
-              <Lines id="h-beh" className="lp-h2 lp-beh-title" lines={['الفسحة، ١٠:١٥']} />
+              <Lines id="h-beh" className="lp-h2 lp-beh-title" lines={['الفسحة، 10:15']} />
               <Reveal i={1} as="p" className="lp-body lp-beh-lead">
                 يرفع المعلم البلاغ من الساحة، وتراجعه شؤون الطلبة. النظام يوثّق كل خطوة، ولا يتخذ أي عقوبة أو قرار تلقائيًا.
               </Reveal>
@@ -238,7 +238,7 @@ export function LandingPage() {
         <section id="followups" className="lp-ch lp-ch-paper" aria-labelledby="h-fu">
           <div className="lp-wrap lp-grid lp-fu">
             <div className="lp-fu-text">
-              <Lines id="h-fu" className="lp-h2" lines={['بعد الحصة', 'السادسة، ١٢:٤٠']} />
+              <Lines id="h-fu" className="lp-h2" lines={['بعد الحصة', 'السادسة، 12:40']} />
               <Reveal i={1} as="p" className="lp-body">
                 ما يُكتشف في الصباح لا يضيع بعد الظهر. تُسند مهمة المتابعة لشخص بعينه، بموعد وأولوية، مرتبطة بالطالب أو بالبلاغ الذي نشأت منه.
               </Reveal>
@@ -267,7 +267,7 @@ export function LandingPage() {
         <section id="reports" className="lp-ch lp-ch-night" aria-labelledby="h-rep">
           <div className="lp-wrap">
             <div className="lp-center">
-              <Lines id="h-rep" className="lp-h2" lines={['نهاية اليوم، ١:٣٠']} />
+              <Lines id="h-rep" className="lp-h2" lines={['نهاية اليوم، 1:30']} />
               <Reveal i={1} as="p" className="lp-body">
                 لوحة الإدارة تجمع اليوم كله: نسبة الحضور، الكشوف التي لم تُعتمد، البلاغات بانتظار القرار، والمهام المتأخرة.
               </Reveal>

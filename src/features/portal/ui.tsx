@@ -39,7 +39,7 @@ export function Panel({
             </span>
           )}
           <div className="min-w-0 flex-1">
-            <h2 className="text-[0.9375rem] font-bold leading-snug">{title}</h2>
+            <h2 className="text-base font-bold leading-snug">{title}</h2>
             {subtitle && <p className="text-xs text-fg-muted">{subtitle}</p>}
           </div>
           {action && (

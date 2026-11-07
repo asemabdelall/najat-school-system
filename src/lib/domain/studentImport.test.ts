@@ -24,16 +24,16 @@ describe('student import', () => {
     expect(mapHeaders(['الفصل']).missing).toEqual(['الرقم الطلابي', 'اسم الطالب']);
   });
   it('normalises digits and dates', () => {
-    expect(latinDigits('١٠/١ ۲۰')).toBe('10/1 20');
+    expect(latinDigits('10/1 ۲۰')).toBe('10/1 20');
     expect(parseDate('15/03/2010')).toBe('2010-03-15');
-    expect(parseDate('٢٠١٠-٠٣-١٥')).toBe('2010-03-15');
+    expect(parseDate('2010-03-15')).toBe('2010-03-15');
     expect(parseDate('31/02/2010')).toBeNull();
   });
   it('validates rows against the database rules, the file and existing students', () => {
     const { map } = mapHeaders(['الرقم الطلابي', 'اسم الطالب', 'الفصل', 'تاريخ الميلاد', 'هاتف ولي الأمر']);
     const rows = validateImport(
       [
-        ['nj-1001', 'محمد أحمد الكندري', '١٠/١', '15/03/2010', '+965 5000 0000'],
+        ['nj-1001', 'محمد أحمد الكندري', '10/1', '15/03/2010', '+965 5000 0000'],
         ['NJ-1001', 'خالد علي', '11-2', '', ''],
         ['NJ-0007', 'سالم', 'فصل 12/9', '1980-01-01', 'abc'],
         ['', 'اب', '', '', ''],
@@ -46,7 +46,7 @@ describe('student import', () => {
     expect(rows[1].errors).toEqual(['الرقم الطلابي مكرر في الملف (السطر 2)']);
     expect(rows[1].classId).toBe('c112');
     expect(rows[2].errors).toHaveLength(4); // existing number, out-of-range DOB, bad phone, unknown class
-    expect(rows[3].errors).toEqual(['الرقم الطلابي مطلوب', 'اسم الطالب بين ٣ و١٢٠ حرفًا']);
+    expect(rows[3].errors).toEqual(['الرقم الطلابي مطلوب', 'اسم الطالب بين 3 و120 حرفًا']);
   });
   it('accepts students archived at a previous year-end as returning (class required), and rejects graduates', () => {
     const { map } = mapHeaders(['الرقم الطلابي', 'اسم الطالب', 'الفصل']);

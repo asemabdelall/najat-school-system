@@ -8,9 +8,9 @@ describe('Kuwait date handling', () => {
     expect(kuwaitToday(new Date('2026-10-27T20:59:00Z'))).toBe('2026-10-27');
   });
   it('never shifts calendar dates when formatting', () => {
-    expect(formatDate('2026-10-01')).toContain('١');
+    expect(formatDate('2026-10-01')).toContain('1');
     expect(formatDate('2026-10-01')).toContain('أكتوبر');
-    expect(formatDate('2026-12-31')).toContain('٣١');
+    expect(formatDate('2026-12-31')).toContain('31');
   });
   it('does date arithmetic in UTC without DST drift', () => {
     expect(addDays('2026-10-31', 1)).toBe('2026-11-01');

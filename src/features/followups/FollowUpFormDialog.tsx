@@ -17,7 +17,7 @@ import { FOLLOW_UP_CATEGORY_LABELS, PRIORITY_LABELS } from '@/lib/domain/followu
 import { useCreateFollowUp, useUpdateFollowUp } from './api';
 
 const schema = z.object({
-  title: z.string().trim().min(3, 'العنوان مطلوب (٣ أحرف على الأقل)').max(160),
+  title: z.string().trim().min(3, 'العنوان مطلوب (3 أحرف على الأقل)').max(160),
   description: z.string().trim().max(3000),
   category: z.string(),
   priority: z.enum(['low', 'normal', 'high', 'urgent']),

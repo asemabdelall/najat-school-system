@@ -44,7 +44,7 @@ function OfficialDocument({ a, schoolName }: { a: Action; schoolName: string }) 
     </div>
   );
   return (
-    <article className="mx-auto max-w-[44rem] rounded-lg border border-line bg-white p-8 text-[0.9375rem] leading-loose text-slate-900 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none" dir="rtl" aria-label="المستند الرسمي">
+    <article className="mx-auto max-w-[44rem] rounded-lg border border-line bg-white p-8 text-base leading-loose text-slate-900 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none" dir="rtl" aria-label="المستند الرسمي">
       <header className="mb-6 flex items-start justify-between gap-4 border-b-2 border-[#004d72] pb-4">
         <div className="text-sm leading-relaxed">
           <p className="font-bold">{schoolName}</p>

@@ -92,7 +92,7 @@ export function StudentFormDialog({ open, onOpenChange, student, onCreated }: Pr
             <Field label="الرقم الطلابي" htmlFor="student_number" required error={errors.student_number?.message} hint="مثال: NJ-2027-0101">
               <Input dir="ltr" className="text-start" autoComplete="off" {...form.register('student_number')} />
             </Field>
-            <Field label="الرقم المدني" htmlFor="civil_id" error={errors.civil_id?.message} hint="١٢ رقمًا. يُستخدم لدخول الطالب إلى اختبار الميول المهنية.">
+            <Field label="الرقم المدني" htmlFor="civil_id" error={errors.civil_id?.message} hint="12 رقمًا. يُستخدم لدخول الطالب إلى اختبار الميول المهنية.">
               <Input dir="ltr" inputMode="numeric" className="text-start" autoComplete="off" {...form.register('civil_id')} />
             </Field>
             <Field label="تاريخ الميلاد" htmlFor="date_of_birth" error={errors.date_of_birth?.message}>

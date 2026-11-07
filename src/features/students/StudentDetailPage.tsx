@@ -2,9 +2,10 @@ import * as React from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Archive, ArrowLeftRight, CalendarCheck2, Flag, Gavel, History, ListChecks, Pencil, RotateCcw, UserRound } from 'lucide-react';
+import { Archive, ArrowLeftRight, CalendarCheck2, ChevronLeft, Flag, Gavel, Hash, History, ListChecks, Pencil, RotateCcw, School, UserRound } from 'lucide-react';
+import { useDocumentTitle } from '@/lib/hooks';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/auth/AuthProvider';
-import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,11 +33,17 @@ import { useEnrollStudent, useSetStudentStatus, useStudent, useStudentEnrollment
 
 const ENROLLMENT_LABELS: Record<string, string> = { active: 'حالي', transferred: 'نُقل إلى فصل آخر', withdrawn: 'منسحب', completed: 'مكتمل' };
 
+function initialsOf(full: string) {
+  const parts = full.trim().split(/\s+/);
+  const first = (w?: string) => (w ? w.replace(/^ال(?=..)/, '')[0] : '');
+  return first(parts[0]) + (parts.length > 1 ? first(parts[parts.length - 1]) : '');
+}
+
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-line py-2.5 last:border-0">
+    <div className="flex justify-between gap-4 border-b border-line py-3.5">
       <dt className="text-sm text-fg-muted">{label}</dt>
-      <dd className="text-sm font-semibold text-fg">{children}</dd>
+      <dd className="text-end text-base font-bold text-fg">{children}</dd>
     </div>
   );
 }
@@ -106,6 +113,7 @@ export function StudentDetailPage() {
   const { studentId } = useParams();
   const { can, isManager } = useAuth();
   const student = useStudent(studentId);
+  useDocumentTitle(student.data?.full_name ?? 'الطالب');
   const enrollments = useStudentEnrollments(studentId);
   const discipline = useStudentDiscipline(studentId, can('discipline.manage'));
   const year = useCurrentYear();
@@ -176,19 +184,30 @@ export function StudentDetailPage() {
 
   return (
     <>
-      <PageHeader
-        title={s.full_name}
-        breadcrumbs={[{ label: 'الطلاب', to: '/students' }, { label: s.full_name }]}
-        description={
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="ltr tabular">{s.student_number}</span>
-            <span aria-hidden>·</span>
-            {active ? <span>فصل {active.school_classes?.name}</span> : <span>غير مسجل في فصل حاليًا</span>}
-            <StudentStatusBadge status={s.status} />
+      <nav aria-label="مسار التنقل" className="no-print mb-3">
+        <ol className="flex flex-wrap items-center gap-1 text-sm text-fg-muted">
+          <li><Link to="/students" className="hover:text-link hover:underline">الطلاب</Link></li>
+          <li aria-hidden><ChevronLeft className="size-3.5" /></li>
+          <li aria-current="page" className="truncate">{s.full_name}</li>
+        </ol>
+      </nav>
+
+      <section className="mb-5 overflow-hidden rounded-xl border border-line bg-surface shadow-sm">
+        <div className="h-20 [background:var(--brand-gradient-deep)] sm:h-24" aria-hidden />
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-3 px-5 pb-5 sm:px-6">
+          <span className="-mt-10 grid size-20 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold text-white shadow-lg ring-4 ring-surface [background:var(--brand-gradient)]" aria-hidden>
+            {initialsOf(s.full_name)}
           </span>
-        }
-        actions={
-          can('students.manage') && (
+          <div className="min-w-0 flex-1 pt-2">
+            <h1 className="text-xl font-extrabold leading-snug tracking-tight sm:text-2xl">{s.full_name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-3 py-1 font-semibold text-fg-muted"><Hash className="size-3.5" aria-hidden /><span className="ltr tabular">{s.student_number}</span></span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 font-bold text-brand dark:text-link"><School className="size-3.5" aria-hidden />{active ? `فصل ${active.school_classes?.name}` : 'غير مسجل في فصل'}</span>
+              <StudentStatusBadge status={s.status} />
+            </div>
+          </div>
+          <div className="no-print flex flex-wrap items-center gap-2">
+            {can('students.manage') && (
             <>
               <Button variant="secondary" onClick={() => setEditOpen(true)}>
                 <Pencil /> تعديل
@@ -219,21 +238,23 @@ export function StudentDetailPage() {
                 </Button>
               )}
             </>
-          )
-        }
-      />
+          )}
+          </div>
+        </div>
+      </section>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
         {[
-          { label: 'نسبة الحضور', value: formatPercent(attendanceRate(totals)), tone: 'text-brand dark:text-link' },
-          { label: 'حضور', value: formatNumber(totals.present), tone: 'text-success' },
-          { label: 'تأخر', value: formatNumber(totals.late), tone: 'text-warning' },
-          { label: 'غياب', value: formatNumber(totals.absent), tone: 'text-danger' },
-          { label: 'غياب بعذر', value: formatNumber(totals.excused), tone: 'text-info' },
-        ].map((k) => (
-          <div key={k.label} className="rounded-lg border border-line bg-surface p-3 shadow-xs">
-            <p className="text-xs text-fg-muted">{k.label}</p>
-            <p className={`tabular mt-0.5 text-xl font-bold ${k.tone}`}>{summary.isPending ? '…' : k.value}</p>
+          { label: 'نسبة الحضور', value: formatPercent(attendanceRate(totals)), tone: 'text-brand dark:text-link', bar: 'bg-brand' },
+          { label: 'حضور', value: formatNumber(totals.present), tone: 'text-success', bar: 'bg-success' },
+          { label: 'تأخر', value: formatNumber(totals.late), tone: 'text-warning', bar: 'bg-[var(--chart-late)]' },
+          { label: 'غياب', value: formatNumber(totals.absent), tone: 'text-danger', bar: 'bg-[var(--chart-absent)]' },
+          { label: 'غياب بعذر', value: formatNumber(totals.excused), tone: 'text-info', bar: 'bg-[var(--chart-excused)]' },
+        ].map((k, i) => (
+          <div key={k.label} className={cn('relative overflow-hidden rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-5', i === 0 && 'col-span-2 md:col-span-1')}>
+            <span className={cn('absolute inset-y-0 start-0 w-1.5', k.bar)} aria-hidden />
+            <p className="text-sm font-bold text-fg-muted">{k.label}</p>
+            <p className={cn('tabular mt-1 text-3xl font-extrabold leading-tight', k.tone)}>{summary.isPending ? '…' : k.value}</p>
           </div>
         ))}
         <p className="col-span-full text-xs text-fg-muted">
@@ -252,9 +273,9 @@ export function StudentDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
-          <Card className="max-w-2xl">
-            <CardHeader title="البيانات الأساسية" />
-            <dl className="px-5 py-2">
+          <Card>
+            <CardHeader icon={<UserRound />} title="البيانات الأساسية" />
+            <dl className="grid gap-x-10 px-5 py-2 sm:px-6 md:grid-cols-2">
               <InfoRow label="الاسم الكامل">{s.full_name}</InfoRow>
               <InfoRow label="الرقم الطلابي"><span className="ltr tabular">{s.student_number}</span></InfoRow>
               <InfoRow label="الرقم المدني"><span className="ltr tabular">{s.civil_id ?? '—'}</span></InfoRow>
@@ -272,7 +293,7 @@ export function StudentDetailPage() {
 
         <TabsContent value="attendance" className="mt-4">
           <Card>
-            <CardHeader title="آخر السجلات" description="أحدث ٦٠ سجل حضور" />
+            <CardHeader title="آخر السجلات" description="أحدث 60 سجل حضور" />
             <QueryState query={records} isEmpty={(d) => d.length === 0} empty={<EmptyState icon={<CalendarCheck2 />} title="لا توجد سجلات حضور" />}>
               {(rows) => (
                 <Table caption="سجل حضور الطالب">
@@ -364,7 +385,7 @@ export function StudentDetailPage() {
                             <Icon className="size-4 text-brand dark:text-link" aria-hidden />
                             <span className="font-semibold">{DISCIPLINE_TYPE_LABELS[d.action_type as DisciplineType]}</span>
                             <Badge tone={DISCIPLINE_STATUS_TONE[d.status as DisciplineStatus]}>{DISCIPLINE_STATUS_LABELS[d.status as DisciplineStatus]}</Badge>
-                            <span className="text-[0.8125rem] text-fg-muted"><DisciplineSummary row={{ ...d, action_type: d.action_type as DisciplineType, status: d.status as DisciplineStatus }} /></span>
+                            <span className="text-sm text-fg-muted"><DisciplineSummary row={{ ...d, action_type: d.action_type as DisciplineType, status: d.status as DisciplineStatus }} /></span>
                             <span className="ms-auto text-xs text-fg-subtle">{d.academic_years?.name}</span>
                           </Link>
                         </li>

@@ -21,7 +21,7 @@ export function PeriodStrip({ periods, value, stateFor, onChange, idPrefix = 'pe
   idPrefix?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label="الحصة" className="flex flex-wrap gap-1.5">
+    <div role="radiogroup" aria-label="الحصة" className="flex flex-wrap gap-2">
       {periods.map((p) => {
         const state = stateFor(p);
         const st = COMPLETION_STYLE[state];
@@ -38,15 +38,15 @@ export function PeriodStrip({ periods, value, stateFor, onChange, idPrefix = 'pe
             onClick={() => onChange(p)}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              'relative flex h-14 w-14 flex-col items-center justify-center rounded-xl border text-sm font-bold transition-colors sm:w-16',
+              'relative flex h-16 w-16 flex-col items-center justify-center rounded-xl border text-sm font-bold transition-colors sm:w-[4.5rem]',
               on ? 'border-transparent text-white' : st.cell,
             )}
           >
             {on && <m.span layoutId={`${idPrefix}-pill`} transition={spring.indicator} className="absolute inset-0 rounded-xl shadow-md [background:var(--brand-gradient)]" aria-hidden />}
-            <span className="relative text-[0.625rem] font-semibold opacity-80">الحصة</span>
-            <span className="relative flex items-center gap-1 tabular text-base leading-none">
+            <span className="relative text-xs font-bold opacity-80">الحصة</span>
+            <span className="relative mt-0.5 flex items-center gap-1 tabular text-lg leading-none">
               {formatNumber(p)}
-              <Icon className={cn('size-3.5', on && 'text-white')} aria-hidden />
+              <Icon className={cn('size-4', on && 'text-white')} aria-hidden />
             </span>
           </m.button>
         );

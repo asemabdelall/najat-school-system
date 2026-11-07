@@ -109,14 +109,14 @@ function SidebarNav({ onNavigate, layoutId }: { onNavigate?: () => void; layoutI
   const { can } = useAuth();
   const unread = useUnreadCount();
   return (
-    <nav aria-label="القائمة الرئيسية" className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+    <nav aria-label="القائمة الرئيسية" className="flex-1 space-y-6 overflow-y-auto px-4 pb-4">
       {NAV.map((group) => {
         const items = group.items.filter((i) => can(i.permission));
         if (!items.length) return null;
         return (
           <div key={group.label}>
-            <p className="mb-1.5 px-3 text-2xs font-bold tracking-wide text-fg-subtle">{group.label}</p>
-            <ul className="space-y-0.5">
+            <p className="mb-2 px-3 text-xs font-extrabold text-fg-subtle">{group.label}</p>
+            <ul className="space-y-1">
               {items.map((item) => (
                 <li key={item.to}>
                   <NavLink
@@ -125,8 +125,8 @@ function SidebarNav({ onNavigate, layoutId }: { onNavigate?: () => void; layoutI
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        'group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors duration-200',
-                        isActive ? 'text-brand dark:text-link' : 'text-fg-muted hover:bg-surface/60 hover:text-fg dark:hover:bg-surface-hover',
+                        'group relative flex h-12 items-center gap-3 rounded-md px-3 text-base font-bold transition-colors duration-200',
+                        isActive ? 'text-white' : 'text-fg-muted hover:bg-surface hover:text-fg-strong dark:hover:bg-surface-hover',
                       )
                     }
                   >
@@ -137,15 +137,13 @@ function SidebarNav({ onNavigate, layoutId }: { onNavigate?: () => void; layoutI
                           <m.span
                             layoutId={layoutId}
                             transition={spring.indicator}
-                            className="absolute inset-0 rounded-md bg-surface shadow-sm dark:bg-surface-selected"
+                            className="absolute inset-0 rounded-md shadow-[0_8px_20px_-8px_rgb(0_77_114/0.7)] [background:var(--brand-gradient-deep)]"
                             aria-hidden
-                          >
-                            <span className="absolute inset-y-2 start-0 w-1 rounded-full bg-leaf" />
-                          </m.span>
+                          />
                         )}
-                        <item.icon className="relative size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" aria-hidden />
+                        <item.icon className="relative size-5 shrink-0 transition-transform duration-200 group-hover:scale-110" aria-hidden />
                         <span className="relative truncate">{item.label}</span>
-                        {item.to === '/notifications' && <CountBadge value={unread.data ?? 0} className="relative ms-auto px-1.5 text-2xs" />}
+                        {item.to === '/notifications' && <CountBadge value={unread.data ?? 0} className="relative ms-auto px-2 text-xs" />}
                       </>
                     )}
                   </NavLink>
@@ -168,12 +166,12 @@ function SidebarBrand() {
       <Link to="/" className="flex items-center gap-3 rounded-lg" aria-label="لوحة التحكم">
         <Logo className="h-14" />
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-[0.9375rem] font-bold text-fg-strong">{settings.data?.school_name_ar ?? 'ثانوية النجاة بنين – حولي'}</p>
-          <p className="mt-0.5 text-xs text-fg-muted">نظام الإدارة المدرسية</p>
+          <p className="truncate text-base font-extrabold text-fg-strong">{settings.data?.school_name_ar ?? 'ثانوية النجاة بنين – حولي'}</p>
+          <p className="mt-0.5 text-sm text-fg-muted">نظام الإدارة المدرسية</p>
         </div>
       </Link>
       {year.data || !isAdmin ? (
-        <div className="mt-4 flex items-center justify-between rounded-md px-3 py-2 text-xs text-white shadow-sm [background:var(--brand-gradient)]">
+        <div className="mt-5 flex items-center justify-between rounded-md px-4 py-2.5 text-sm text-white shadow-sm [background:var(--brand-gradient)]">
           <span className="font-semibold">العام الدراسي</span>
           <span className="tabular font-bold">{year.data?.name ?? '—'}</span>
         </div>
@@ -198,12 +196,12 @@ function UserMenu() {
       <DropdownMenu dir="rtl">
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-surface-hover" aria-label="قائمة الحساب">
-            <span className="grid size-8 place-items-center rounded-full bg-brand text-sm font-bold text-white">
+            <span className="grid size-10 place-items-center rounded-full text-base font-bold text-white [background:var(--brand-gradient-deep)]">
               {profile?.full_name.replace(/^أ\.\s*/, '').charAt(0) ?? <UserRound className="size-4" />}
             </span>
             <span className="hidden min-w-0 leading-tight md:block">
-              <span className="block max-w-40 truncate text-[0.8125rem] font-bold text-fg">{profile?.full_name}</span>
-              <span className="block text-2xs text-fg-muted">{roles.map((r) => ROLE_LABELS[r]).join('، ')}</span>
+              <span className="block max-w-44 truncate text-sm font-bold text-fg">{profile?.full_name}</span>
+              <span className="block text-xs text-fg-muted">{roles.map((r) => ROLE_LABELS[r]).join('، ')}</span>
             </span>
           </button>
         </DropdownMenuTrigger>
@@ -251,7 +249,7 @@ function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { theme, toggle } = useTheme();
   return (
     <header className="glass no-print pt-safe sticky top-0 z-30 border-b max-sm:border-line max-sm:bg-surface max-sm:[-webkit-backdrop-filter:none] max-sm:[backdrop-filter:none]">
-      <div className="flex h-16 items-center gap-2 px-3 sm:px-6">
+      <div className="flex h-16 items-center gap-2 px-3 sm:h-[4.5rem] sm:px-8">
         <Button variant="ghost" size="icon" className="hidden sm:inline-flex lg:hidden" onClick={onOpenMenu} aria-label="فتح القائمة">
           <Menu className="size-5" />
         </Button>
@@ -265,7 +263,7 @@ function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18 }}
-            className="min-w-0 truncate text-sm font-bold text-fg-muted"
+            className="min-w-0 truncate text-base font-extrabold text-fg-strong sm:text-lg"
           >
             {title}
           </m.p>
@@ -279,7 +277,7 @@ function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
           <Button asChild variant="ghost" size="icon" className="relative">
             <Link to="/notifications" aria-label={`الإشعارات${unread.data ? `، ${unread.data} غير مقروءة` : ''}`}>
               <Bell className="size-[18px]" />
-              <CountBadge value={unread.data ?? 0} className="absolute -top-0.5 end-0.5 min-w-4 px-1 text-[0.625rem] leading-4 ring-2 ring-surface" />
+              <CountBadge value={unread.data ?? 0} className="absolute -top-0.5 end-0.5 min-w-4 px-1 text-2xs leading-4 ring-2 ring-surface" />
             </Link>
           </Button>
           <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden />
@@ -301,11 +299,11 @@ function BottomTabs({ onMore, moreOpen }: { onMore: () => void; moreOpen: boolea
     .sort((a, b) => TAB_PRIORITY.indexOf(a.to) - TAB_PRIORITY.indexOf(b.to))
     .slice(0, 4);
   return (
-    <nav aria-label="التنقل السريع" className="glass no-print pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface [-webkit-backdrop-filter:none] [backdrop-filter:none] sm:hidden">
+    <nav aria-label="التنقل السريع" className="glass no-print pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface shadow-[0_-6px_20px_-12px_rgb(15_23_42/0.25)] [-webkit-backdrop-filter:none] [backdrop-filter:none] sm:hidden">
       <ul className="grid grid-cols-5">
         {items.map((item) => (
           <li key={item.to}>
-            <NavLink to={item.to} end={item.end} className="relative flex h-16 flex-col items-center justify-center gap-1 text-2xs font-semibold">
+            <NavLink to={item.to} end={item.end} className="relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-bold">
               {({ isActive }) => (
                 <>
                   {isActive && !moreOpen && (
@@ -321,7 +319,7 @@ function BottomTabs({ onMore, moreOpen }: { onMore: () => void; moreOpen: boolea
           </li>
         ))}
         <li>
-          <button type="button" onClick={onMore} className="relative flex h-16 w-full flex-col items-center justify-center gap-1 text-2xs font-semibold text-fg-muted" aria-label="المزيد من الأقسام" aria-expanded={moreOpen}>
+          <button type="button" onClick={onMore} className="relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs font-bold text-fg-muted" aria-label="المزيد من الأقسام" aria-expanded={moreOpen}>
             {moreOpen && <m.span layoutId="tab-pill" transition={spring.indicator} className="absolute inset-x-3 top-1.5 h-9 rounded-full bg-brand-soft" aria-hidden />}
             <MoreHorizontal className={cn('relative size-[22px]', moreOpen && 'text-brand dark:text-link')} aria-hidden />
             <span className="relative">المزيد</span>
@@ -453,7 +451,7 @@ export function AppShell() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr] print:!block">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[18.5rem_1fr] print:!block">
       <a href="#main" className="sr-only z-50 rounded-md bg-brand px-4 py-2 text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4">
         تخطَّ إلى المحتوى
       </a>
@@ -470,7 +468,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-col">
         <TopBar onOpenMenu={() => setMenuOpen(true)} />
         <OfflineBanner />
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[90rem] flex-1 px-3 pb-24 pt-5 outline-none sm:px-6 sm:py-6">
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[90rem] flex-1 px-4 pb-28 pt-5 outline-none sm:px-8 sm:py-8">
           <AnimatedOutlet />
         </main>
         <footer className="web-only no-print hidden px-6 pb-5 text-center text-2xs text-fg-subtle sm:block">

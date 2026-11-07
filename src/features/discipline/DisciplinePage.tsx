@@ -122,7 +122,7 @@ export function DisciplinePage() {
                   aria-selected={on}
                   onClick={() => update('type', t)}
                   className={cn(
-                    'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[0.8125rem] font-semibold transition-colors',
+                    'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-semibold transition-colors',
                     on ? 'bg-surface text-fg-strong shadow-xs' : 'text-fg-muted hover:text-fg',
                   )}
                 >
@@ -178,7 +178,7 @@ export function DisciplinePage() {
                           <p className="line-clamp-1 text-xs text-fg-muted">{r.reason}</p>
                         </Td>
                         <Td className="whitespace-nowrap"><span className="inline-flex items-center gap-1.5"><Icon className="size-4 text-brand dark:text-link" aria-hidden />{DISCIPLINE_TYPE_LABELS[r.action_type]}</span></Td>
-                        <Td className="whitespace-nowrap text-[0.8125rem]"><DisciplineSummary row={r} /></Td>
+                        <Td className="whitespace-nowrap text-sm"><DisciplineSummary row={r} /></Td>
                         <Td><Badge tone={DISCIPLINE_STATUS_TONE[r.status]}>{DISCIPLINE_STATUS_LABELS[r.status]}</Badge></Td>
                         <Td className="whitespace-nowrap text-fg-muted">{formatDate(r.created_at.slice(0, 10))}</Td>
                       </Tr>

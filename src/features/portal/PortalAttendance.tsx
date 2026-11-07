@@ -14,7 +14,7 @@ import {
 } from '@/lib/domain/portal';
 import { AllClear, KIND_STYLE, Legend, PageTitle, Panel, Pill, RateRing, WEEKDAY_SHORT, usePortalData } from './ui';
 
-/** Arabic count agreement: حصة، حصتان، ٣ حصص. */
+/** Arabic count agreement: حصة، حصتان، 3 حصص. */
 function periodsText(n: number) {
   return n === 1 ? 'حصة' : n === 2 ? 'حصتان' : `${formatNumber(n)} حصص`;
 }
@@ -215,7 +215,7 @@ function Calendar({ d }: { d: PortalData }) {
               >
                 <span className="tabular">{formatNumber(Number(c.date.slice(8)))}</span>
                 {(kind === 'partial' || kind === 'late') && (
-                  <span className="tabular text-[0.625rem] font-semibold opacity-80">
+                  <span className="tabular text-2xs font-semibold opacity-80">
                     {kind === 'partial' ? periodsText(byDay.get(c.date)?.items.filter((x) => x.status === 'absent').length ?? 0) : 'تأخر'}
                   </span>
                 )}
@@ -285,7 +285,7 @@ function DayLog({ d }: { d: PortalData }) {
     <Panel title="سجل الأيام" subtitle="أيام الغياب والتأخر بالتفصيل" icon={ListFilter}>
       <div role="radiogroup" aria-label="تصفية السجل" className="mb-3 inline-flex rounded-md border border-line bg-surface-sunken p-0.5">
         {FILTERS.map(([k, l]) => (
-          <button key={k} role="radio" aria-checked={filter === k} onClick={() => { setFilter(k); setLimit(12); }} className={cn('h-8 rounded px-3 text-[0.8125rem] font-semibold text-fg-muted transition-colors', filter === k && 'bg-surface text-brand shadow-sm dark:text-link')}>
+          <button key={k} role="radio" aria-checked={filter === k} onClick={() => { setFilter(k); setLimit(12); }} className={cn('h-8 rounded px-3 text-sm font-semibold text-fg-muted transition-colors', filter === k && 'bg-surface text-brand shadow-sm dark:text-link')}>
             {l}
           </button>
         ))}

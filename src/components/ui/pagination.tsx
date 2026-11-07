@@ -12,19 +12,19 @@ export function Pagination({ page, pageSize, total, onPageChange }: {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(total, page * pageSize);
   return (
-    <nav aria-label="التنقل بين الصفحات" className="no-print flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 text-[0.8125rem] text-fg-muted">
+    <nav aria-label="التنقل بين الصفحات" className="no-print flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3.5 text-sm text-fg-muted">
       <p className="tabular">
         عرض {formatNumber(from)}–{formatNumber(to)} من {formatNumber(total)}
       </p>
       <div className="flex items-center gap-1">
         {/* In RTL "previous" points right. */}
-        <Button variant="secondary" size="icon-sm" aria-label="الصفحة السابقة" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+        <Button variant="secondary" size="icon" aria-label="الصفحة السابقة" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
           <ChevronRight />
         </Button>
-        <span className="tabular min-w-16 text-center">
+        <span className="tabular min-w-16 text-center font-bold text-fg">
           {formatNumber(page)} / {formatNumber(pages)}
         </span>
-        <Button variant="secondary" size="icon-sm" aria-label="الصفحة التالية" disabled={page >= pages} onClick={() => onPageChange(page + 1)}>
+        <Button variant="secondary" size="icon" aria-label="الصفحة التالية" disabled={page >= pages} onClick={() => onPageChange(page + 1)}>
           <ChevronLeft />
         </Button>
       </div>

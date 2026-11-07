@@ -200,7 +200,7 @@ export function IncidentDetailPage() {
             className="space-y-4"
             onSubmit={async (e) => {
               e.preventDefault();
-              if (draft.description.trim().length < 10) return toast.error('صف الواقعة في ١٠ أحرف على الأقل');
+              if (draft.description.trim().length < 10) return toast.error('صف الواقعة في 10 أحرف على الأقل');
               try {
                 await edit.mutateAsync({ description: draft.description.trim(), location: draft.location.trim() || null, severity: draft.severity });
                 toast.success('تم حفظ التعديل');

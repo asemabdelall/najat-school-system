@@ -94,7 +94,7 @@ export function DialogContent({
                 <div>
                   <D.Title className="text-base font-bold text-fg-strong">{title}</D.Title>
                   {description ? (
-                    <D.Description className="mt-0.5 text-[0.8125rem] text-fg-muted">{description}</D.Description>
+                    <D.Description className="mt-0.5 text-sm text-fg-muted">{description}</D.Description>
                   ) : (
                     <D.Description className="sr-only">{typeof title === 'string' ? title : ''}</D.Description>
                   )}

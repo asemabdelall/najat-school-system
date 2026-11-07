@@ -76,7 +76,7 @@ export const ATTENDANCE_TONE_TEXT: Record<AttendanceTone, string> = {
   none: 'لم يُرصد حضور بعد هذا العام',
 };
 
-/** Short summary of one day's non-present marks, e.g. "غياب: الحصة ١، ٢ · تأخر: الحصة ٣". */
+/** Short summary of one day's non-present marks, e.g. "غياب: الحصة 1، 2 · تأخر: الحصة 3". */
 export function summarizeDay(day: PortalDay, fmt: (n: number) => string = String): { status: AttendanceStatus; periods: string }[] {
   const order: AttendanceStatus[] = ['absent', 'late', 'excused'];
   return order

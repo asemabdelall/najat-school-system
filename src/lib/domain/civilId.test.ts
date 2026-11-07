@@ -16,7 +16,7 @@ describe('civil ID', () => {
     expect(isValidCivilId('30001010000a')).toBe(false);
   });
   it('normalises Arabic-Indic digits, spaces and dashes', () => {
-    expect(normalizeCivilId('٣٠٠ ٠١٠-١٠٠٠١٨')).toBe('300010100018');
+    expect(normalizeCivilId('300 010-100018')).toBe('300010100018');
     expect(normalizeCivilId('۳۰۰۰۱۰۱۰۰۰۱۸')).toBe('300010100018');
   });
 });

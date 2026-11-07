@@ -47,7 +47,7 @@ function SchoolSettingsForm({ settings }: { settings: SchoolSettings }) {
   const submit = () => (v.attendance_mode !== settings.attendance_mode ? setConfirmMode(true) : save.mutate());
   return (
     <Card>
-      <CardHeader icon={<Settings2 />} title="إعدادات المدرسة" description={`آخر تحديث: ${new Date(settings.updated_at).toLocaleString('ar-KW', { timeZone: 'Asia/Kuwait' })}`} />
+      <CardHeader icon={<Settings2 />} title="إعدادات المدرسة" description={`آخر تحديث: ${new Date(settings.updated_at).toLocaleString('ar-KW-u-nu-latn', { timeZone: 'Asia/Kuwait' })}`} />
       <CardContent>
         <form className="grid gap-4 md:grid-cols-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <Field label="اسم المدرسة (عربي)" htmlFor="s-name-ar" required><Input value={v.school_name_ar} onChange={(e) => setV({ ...v, school_name_ar: e.target.value })} required /></Field>
@@ -61,7 +61,7 @@ function SchoolSettingsForm({ settings }: { settings: SchoolSettings }) {
           <Field label="عدد الحصص اليومية" htmlFor="s-periods" hint="يُستخدم في نظام الرصد بالحصة.">
             <Input type="number" min={1} max={10} value={v.periods_per_day} onChange={(e) => setV({ ...v, periods_per_day: Math.min(10, Math.max(1, Number(e.target.value) || 1)) })} />
           </Field>
-          <Field label="مهلة الرصد المتأخر للمعلم (أيام)" htmlFor="s-backdate" hint="عدد الأيام السابقة التي يمكن للمعلم رصدها. ٠ = اليوم فقط.">
+          <Field label="مهلة الرصد المتأخر للمعلم (أيام)" htmlFor="s-backdate" hint="عدد الأيام السابقة التي يمكن للمعلم رصدها. 0 = اليوم فقط.">
             <Input type="number" min={0} max={14} value={v.teacher_backdate_days} onChange={(e) => setV({ ...v, teacher_backdate_days: Math.min(14, Math.max(0, Number(e.target.value) || 0)) })} />
           </Field>
           <Field label="تنبيه اقتراب موعد المتابعة (أيام)" htmlFor="s-due" hint="يُشعَر المسؤول عند اقتراب تاريخ الاستحقاق بهذا العدد من الأيام.">

@@ -80,7 +80,7 @@ export function validateImport(rows: string[][], map: Partial<Record<ImportField
     let returning = false;
 
     if (!values.student_number) errors.push('الرقم الطلابي مطلوب');
-    else if (!/^[A-Za-z0-9-]{3,20}$/.test(values.student_number)) errors.push('الرقم الطلابي: ٣–٢٠ حرفًا إنجليزيًا أو رقمًا أو شرطة');
+    else if (!/^[A-Za-z0-9-]{3,20}$/.test(values.student_number)) errors.push('الرقم الطلابي: 3–20 حرفًا إنجليزيًا أو رقمًا أو شرطة');
     else {
       const key = values.student_number.toLowerCase();
       const status = existing.get(key);
@@ -92,7 +92,7 @@ export function validateImport(rows: string[][], map: Partial<Record<ImportField
     }
     const nameLen = values.full_name.length;
     if (!nameLen) errors.push('اسم الطالب مطلوب');
-    else if (nameLen < 3 || nameLen > 120) errors.push('اسم الطالب بين ٣ و١٢٠ حرفًا');
+    else if (nameLen < 3 || nameLen > 120) errors.push('اسم الطالب بين 3 و120 حرفًا');
 
     let dob = '';
     if (values.date_of_birth) {
@@ -102,9 +102,9 @@ export function validateImport(rows: string[][], map: Partial<Record<ImportField
       else dob = iso;
     }
     values.date_of_birth = dob;
-    if (values.guardian_name.length > 120) errors.push('اسم ولي الأمر أطول من ١٢٠ حرفًا');
+    if (values.guardian_name.length > 120) errors.push('اسم ولي الأمر أطول من 120 حرفًا');
     if (values.guardian_phone && !/^\+?[0-9 ]{7,20}$/.test(values.guardian_phone)) errors.push('هاتف ولي الأمر غير صالح');
-    if (values.notes.length > 2000) errors.push('الملاحظات أطول من ٢٠٠٠ حرف');
+    if (values.notes.length > 2000) errors.push('الملاحظات أطول من 2000 حرف');
 
     let cls: ImportClass | undefined;
     if (values.class) {

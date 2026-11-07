@@ -54,7 +54,7 @@ export function StudentPicker({ id, value, onChange, multiple = false, max = 20,
       {value.length > 0 && (
         <ul className="flex flex-wrap gap-1.5" aria-label="الطلاب المختارون">
           {value.map((s) => (
-            <li key={s.id} className="flex items-center gap-1 rounded-full border border-line bg-surface-sunken py-0.5 pe-1 ps-3 text-[0.8125rem]">
+            <li key={s.id} className="flex items-center gap-1 rounded-full border border-line bg-surface-sunken py-0.5 pe-1 ps-3 text-sm">
               <span className="font-semibold">{s.full_name}</span>
               {s.class_name && <span className="text-fg-muted">· {s.class_name}</span>}
               <button type="button" className="rounded-full p-1 text-fg-muted hover:bg-surface-hover hover:text-danger" aria-label={`إزالة ${s.full_name}`} onClick={() => onChange(value.filter((v) => v.id !== s.id))}>

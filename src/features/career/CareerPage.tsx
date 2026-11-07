@@ -67,9 +67,9 @@ function TopThree({ row }: { row: Pick<CareerListRow, 'top_1' | 'top_2' | 'top_3
   if (!row.top_1) return <Badge tone="warning"><CircleDashed /> لم يؤدِّ الاختبار</Badge>;
   return (
     <span className="flex flex-wrap gap-1">
-      <Badge tone="brand">١. {careerLabel(row.top_1)}</Badge>
-      <Badge tone="outline">٢. {careerLabel(row.top_2)}</Badge>
-      <Badge tone="outline">٣. {careerLabel(row.top_3)}</Badge>
+      <Badge tone="brand">1. {careerLabel(row.top_1)}</Badge>
+      <Badge tone="outline">2. {careerLabel(row.top_2)}</Badge>
+      <Badge tone="outline">3. {careerLabel(row.top_3)}</Badge>
     </span>
   );
 }
@@ -246,7 +246,7 @@ export function CareerPage() {
                       <Td className="tabular">{num(c.first)}</Td>
                       <Td className="tabular">{formatPercent(c.share)}</Td>
                       <Td className="tabular">{num(c.inTop3)}</Td>
-                      <Td className="tabular whitespace-nowrap">{c.average == null ? '—' : `${formatNumber(c.average)} / ٥`}</Td>
+                      <Td className="tabular whitespace-nowrap">{c.average == null ? '—' : `${formatNumber(c.average)} / 5`}</Td>
                     </Tr>
                   ))}
                 </TBody>
