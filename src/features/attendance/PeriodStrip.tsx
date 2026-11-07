@@ -38,7 +38,7 @@ export function PeriodStrip({ periods, value, stateFor, onChange, idPrefix = 'pe
             onClick={() => onChange(p)}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              'relative flex h-16 w-16 flex-col items-center justify-center rounded-xl border text-sm font-bold transition-colors sm:w-[4.5rem]',
+              'relative flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-xl border text-sm font-bold transition-colors sm:w-[4.5rem]',
               on ? 'border-transparent text-white' : st.cell,
             )}
           >
