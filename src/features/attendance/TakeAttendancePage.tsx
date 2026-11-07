@@ -2,8 +2,7 @@ import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { m } from 'motion/react';
-import { spring } from '@/lib/motion';
-import { AlertTriangle, ArrowLeft, CalendarX2, Check, CheckCheck, Clock, Copy, FileCheck2, History, Lock, RotateCcw, Save, Send, Unlock, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CalendarX2, Check, CheckCheck, Clock, Copy, FileCheck2, History, Lock, MessageSquarePlus, RotateCcw, Save, Send, Unlock, X } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -25,19 +24,19 @@ import {
 import { useReopenSession, useRoster, useSaveAttendance, useSession, useSessionsForDate, type MarkEntry } from './api';
 import { CompletionLegend, PeriodStrip } from './PeriodStrip';
 
-const STATUS_STYLE: Record<AttendanceStatus, { icon: React.ElementType; on: string }> = {
-  present: { icon: Check, on: 'border-success bg-success text-white dark:text-slate-950' },
-  absent: { icon: X, on: 'border-danger bg-danger text-white dark:text-slate-950' },
-  late: { icon: Clock, on: 'border-warning bg-warning text-white dark:text-slate-950' },
-  excused: { icon: FileCheck2, on: 'border-info bg-info text-white dark:text-slate-950' },
+const STATUS_STYLE: Record<AttendanceStatus, { icon: React.ElementType; short: string; on: string; edge: string; tint: string }> = {
+  present: { icon: Check, short: 'حاضر', on: 'bg-success text-white shadow-[0_6px_14px_-6px_var(--color-success)] dark:text-slate-950', edge: 'border-s-success', tint: '' },
+  absent: { icon: X, short: 'غائب', on: 'bg-[var(--chart-absent)] text-white shadow-[0_6px_14px_-6px_var(--chart-absent)]', edge: 'border-s-[var(--chart-absent)]', tint: 'bg-danger-soft/50' },
+  late: { icon: Clock, short: 'متأخر', on: 'bg-[var(--chart-late)] text-white shadow-[0_6px_14px_-6px_var(--chart-late)]', edge: 'border-s-[var(--chart-late)]', tint: 'bg-warning-soft/50' },
+  excused: { icon: FileCheck2, short: 'بعذر', on: 'bg-[var(--chart-excused)] text-white shadow-[0_6px_14px_-6px_var(--chart-excused)]', edge: 'border-s-[var(--chart-excused)]', tint: 'bg-info-soft/50' },
 };
 
-/** Radio-group of the four statuses for one student; the highlight glides to the chosen status. */
-function StatusPicker({ id, name, value, disabled, onChange }: { id: string; name: string; value: AttendanceStatus | null; disabled: boolean; onChange: (s: AttendanceStatus) => void }) {
+/** Four equal, thumb-sized buttons (icon above a short word). */
+function StatusPicker({ name, value, disabled, onChange }: { name: string; value: AttendanceStatus | null; disabled: boolean; onChange: (s: AttendanceStatus) => void }) {
   return (
-    <div role="radiogroup" aria-label={`حالة ${name}`} className="inline-flex w-full gap-1 rounded-xl bg-surface-sunken p-1 sm:w-auto">
+    <div role="radiogroup" aria-label={`حالة ${name}`} className="grid w-full grid-cols-4 gap-2 md:w-[23rem]">
       {ATTENDANCE_STATUSES.map((s) => {
-        const Icon = STATUS_STYLE[s].icon;
+        const st = STATUS_STYLE[s];
         const checked = value === s;
         return (
           <m.button
@@ -45,22 +44,49 @@ function StatusPicker({ id, name, value, disabled, onChange }: { id: string; nam
             type="button"
             role="radio"
             aria-checked={checked}
+            aria-label={ATTENDANCE_LABELS[s]}
             disabled={disabled}
             onClick={() => onChange(s)}
-            whileTap={disabled ? undefined : { scale: 0.94 }}
+            whileTap={disabled ? undefined : { scale: 0.92 }}
+            animate={checked ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={{ duration: 0.22 }}
             className={cn(
-              'relative inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-bold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none',
-              checked ? 'text-white dark:text-slate-950' : 'text-fg-muted hover:bg-surface hover:text-fg',
+              'flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-sm font-bold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60',
+              checked ? st.on : 'border border-line bg-surface text-fg-muted hover:border-line-strong hover:text-fg',
             )}
           >
-            {checked && (
-              <m.span layoutId={`att-${id}`} transition={spring.indicator} className={cn('absolute inset-0 rounded-lg shadow-sm', STATUS_STYLE[s].on)} aria-hidden />
-            )}
-            <Icon className="relative size-4" aria-hidden />
-            <span className="relative">{ATTENDANCE_LABELS[s]}</span>
+            <st.icon className="size-5" strokeWidth={checked ? 3 : 2.25} aria-hidden />
+            <span className="leading-none">{st.short}</span>
           </m.button>
         );
       })}
+    </div>
+  );
+}
+
+/** − 5 + stepper for minutes late. */
+function MinutesStepper({ value, disabled, label, onChange }: { value: number | null; disabled: boolean; label: string; onChange: (v: number) => void }) {
+  const v = value ?? 5;
+  const set = (n: number) => onChange(Math.min(300, Math.max(1, n)));
+  return (
+    <div className="flex items-center gap-2 text-sm font-bold text-warning">
+      <Clock className="size-4" aria-hidden />
+      <span>دقائق التأخر</span>
+      <div className="flex items-center rounded-lg border border-warning-line bg-surface">
+        <button type="button" className="grid size-9 place-items-center text-lg disabled:opacity-40" disabled={disabled || v <= 1} onClick={() => set(v - 5 < 1 ? 1 : v - 5)} aria-label="إنقاص">−</button>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={300}
+          aria-label={label}
+          disabled={disabled}
+          value={value ?? ''}
+          onChange={(e) => e.target.value && set(Number(e.target.value))}
+          className="tabular h-9 w-12 bg-transparent text-center text-base text-fg outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <button type="button" className="grid size-9 place-items-center text-lg disabled:opacity-40" disabled={disabled || v >= 300} onClick={() => set(v + 5)} aria-label="زيادة">+</button>
+      </div>
     </div>
   );
 }
@@ -91,7 +117,8 @@ export function TakeAttendancePage() {
 
   const [marks, setMarks] = React.useState<Map<string, MarkEntry>>(new Map());
   const [saved, setSaved] = React.useState<Map<string, MarkEntry>>(new Map());
-  const [filter, setFilter] = React.useState<'all' | 'unmarked' | 'absent' | 'late'>('all');
+  const [filter, setFilter] = React.useState<'all' | 'unmarked' | AttendanceStatus>('all');
+  const [openNotes, setOpenNotes] = React.useState<Set<string>>(new Set());
   const [correctionOpen, setCorrectionOpen] = React.useState(false);
   const [reopenOpen, setReopenOpen] = React.useState(false);
 
@@ -103,6 +130,7 @@ export function TakeAttendancePage() {
     for (const r of sessionData.records) m.set(r.student_id, { status: r.status as AttendanceStatus, minutes_late: r.minutes_late, note: r.note ?? '' });
     setMarks(new Map(m));
     setSaved(m);
+    setOpenNotes(new Set());
   }, [sessionData]);
 
   const session = sessionData?.session ?? null;
@@ -208,32 +236,31 @@ export function TakeAttendancePage() {
       <PageHeader
         title="رصد الحضور"
         breadcrumbs={[{ label: 'الحضور والغياب', to: '/attendance' }, { label: 'رصد الحضور' }]}
-        description={mode === 'daily' ? 'حضور يومي: جلسة واحدة لكل فصل يوميًا' : `حضور بالحصة: ${formatNumber(settings.data?.periods_per_day)} حصص يوميًا، ولكل حصة رصد مستقل`}
       />
 
       <Card className="no-print mb-4 overflow-hidden">
-        <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-[minmax(13rem,18rem)_minmax(11rem,14rem)_1fr]">
+        <div className="grid grid-cols-2 gap-3 p-4 sm:gap-4 sm:p-5 lg:grid-cols-[minmax(13rem,18rem)_minmax(11rem,14rem)_1fr]">
           <div>
-            <label htmlFor="att-class" className="mb-2 block text-sm font-bold text-fg-strong">الفصل</label>
+            <label htmlFor="att-class" className="mb-1.5 block text-sm font-bold text-fg-strong">الفصل</label>
             <Select id="att-class" value={classId ?? ''} onChange={(e) => updateParam('class', e.target.value)}>
               <option value="" disabled>اختر الفصل</option>
               {classes.data?.map((c) => <option key={c.id} value={c.id}>فصل {c.name}</option>)}
             </Select>
           </div>
           <div>
-            <label htmlFor="att-date" className="mb-2 block text-sm font-bold text-fg-strong">التاريخ</label>
+            <label htmlFor="att-date" className="mb-1.5 block text-sm font-bold text-fg-strong">التاريخ</label>
             <Input id="att-date" type="date" value={date} max={today} min={minDate} onChange={(e) => e.target.value && updateParam('date', e.target.value)} />
           </div>
-          <div className="flex items-end">
-            <p className="rounded-md bg-brand-soft px-4 py-2.5 text-base font-bold text-brand dark:text-link">
-              {formatWeekday(date)} · {formatDate(date)}
-            </p>
-          </div>
+          <p className="col-span-2 self-end text-sm font-semibold text-fg-muted lg:col-span-1 lg:pb-2.5">
+            {formatWeekday(date)} · {formatDate(date)}
+          </p>
         </div>
         {mode === 'period' && (
-          <div className="space-y-3 border-t border-line bg-surface-sunken/40 p-5 sm:px-6">
-            <PeriodStrip periods={periods} value={period} stateFor={stateFor} onChange={(p) => updateParam('period', String(p))} />
-            {classId && <CompletionLegend />}
+          <div className="border-t border-line bg-surface-sunken/40 px-4 py-3 sm:px-5">
+            <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5 [&>div]:flex-nowrap">
+              <PeriodStrip periods={periods} value={period} stateFor={stateFor} onChange={(p) => updateParam('period', String(p))} />
+            </div>
+            {classId && <div className="mt-2 hidden md:block"><CompletionLegend /></div>}
           </div>
         )}
       </Card>
@@ -280,37 +307,37 @@ export function TakeAttendancePage() {
             </div>
           )}
 
-          <Card>
-            <div className="sticky top-16 z-20 space-y-3 rounded-t-lg border-b border-line bg-surface/95 px-4 py-3 backdrop-blur">
-              <div className="flex flex-wrap items-center gap-4">
-                <div
-                  className="relative grid size-14 shrink-0 place-items-center rounded-full"
-                  style={{ background: `conic-gradient(var(--color-success) ${pct * 3.6}deg, var(--color-surface-sunken) 0deg)` }}
-                  role="img"
-                  aria-label={`تم رصد ${pct}٪`}
-                >
-                  <span className="tabular grid size-11 place-items-center rounded-full bg-surface text-sm font-bold">{formatNumber(pct)}٪</span>
+          <Card className="overflow-visible">
+            <div className="sticky top-16 z-20 rounded-t-lg border-b border-line bg-surface/95 px-4 pb-3 pt-4 backdrop-blur sm:top-[4.5rem] sm:px-5">
+              <div className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <p className="text-base font-extrabold text-fg-strong">فصل {selectedClass?.name} · {periodLabel(period)}</p>
+                    <CompletionBadge state={completion} />
+                  </div>
+                  <p className="mt-1 text-sm text-fg-muted" aria-live="polite">
+                    تم رصد <b className="tabular text-fg-strong">{formatNumber(counts.marked)}</b> من <span className="tabular">{formatNumber(students.length)}</span>
+                    {counts.unmarked > 0 && <> · متبقٍ <b className="tabular text-warning">{formatNumber(counts.unmarked)}</b></>}
+                  </p>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-base font-bold text-fg-strong">فصل {selectedClass?.name} · {periodLabel(period)}</p>
-                  <div className="mt-1"><CompletionBadge state={completion} /></div>
-                </div>
-                <div className="ms-auto flex flex-wrap items-center gap-2">
-                  {!readOnly && prevPeriod && prevRecords.length > 0 && counts.unmarked > 0 && (
-                    <Button size="sm" variant="secondary" onClick={copyFromPrevious}><Copy /> نسخ من {periodLabel(prevPeriod)}</Button>
-                  )}
-                  {!readOnly && counts.unmarked > 0 && (
-                    <Button size="sm" variant="subtle" onClick={markAllUnmarkedPresent}><CheckCheck /> الباقون حاضرون</Button>
-                  )}
-                </div>
+                {!readOnly && counts.unmarked > 0 && (
+                  <Button size="md" variant="accent" onClick={markAllUnmarkedPresent} className="shrink-0">
+                    <CheckCheck /> <span className="sm:hidden">الكل حاضر</span><span className="hidden sm:inline">الباقون حاضرون</span>
+                  </Button>
+                )}
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-sunken" aria-hidden>
+                <m.div className="h-full rounded-full [background:var(--brand-gradient)]" initial={false} animate={{ width: `${pct}%` }} transition={{ duration: 0.4 }} />
               </div>
 
-              <div role="tablist" aria-label="تصفية الطلاب" className="flex flex-wrap gap-1.5">
+              <div role="tablist" aria-label="تصفية الطلاب" className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-0.5 sm:-mx-5 sm:px-5">
                 {([
                   ['all', 'الكل', students.length, 'bg-surface-sunken text-fg'],
                   ['unmarked', 'لم يُرصد', counts.unmarked, 'bg-surface-sunken text-fg'],
-                  ['absent', ATTENDANCE_LABELS.absent, counts.absent, 'bg-danger-soft text-danger'],
-                  ['late', ATTENDANCE_LABELS.late, counts.late, 'bg-warning-soft text-warning'],
+                  ['present', 'حاضر', counts.present, 'bg-success-soft text-success'],
+                  ['absent', 'غائب', counts.absent, 'bg-danger-soft text-danger'],
+                  ['late', 'متأخر', counts.late, 'bg-warning-soft text-warning'],
+                  ['excused', 'بعذر', counts.excused, 'bg-info-soft text-info'],
                 ] as const).map(([key, label, n, tone]) => (
                   <button
                     key={key}
@@ -319,47 +346,83 @@ export function TakeAttendancePage() {
                     aria-selected={filter === key}
                     onClick={() => setFilter(key)}
                     className={cn(
-                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors',
-                      filter === key ? 'border-brand bg-brand text-on-brand' : 'border-line hover:border-line-strong',
+                      'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-bold transition-colors',
+                      filter === key ? 'border-brand bg-brand text-on-brand' : 'border-line bg-surface text-fg-muted hover:border-line-strong',
                     )}
                   >
                     {label}
                     <span className={cn('tabular min-w-6 rounded-full px-1.5 text-center text-xs leading-5', filter === key ? 'bg-white/20 text-on-brand' : tone)}>{formatNumber(n)}</span>
                   </button>
                 ))}
-                <span className="ms-auto hidden items-center gap-3 text-sm text-fg-muted md:flex">
-                  <span>{ATTENDANCE_LABELS.present}: <b className="tabular text-success">{formatNumber(counts.present)}</b></span>
-                  <span>{ATTENDANCE_LABELS.excused}: <b className="tabular text-info">{formatNumber(counts.excused)}</b></span>
-                </span>
               </div>
+              {!readOnly && prevPeriod && prevRecords.length > 0 && counts.unmarked > 0 && (
+                <button type="button" onClick={copyFromPrevious} className="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-link hover:underline">
+                  <Copy className="size-4" aria-hidden /> نسخ الحالات من {periodLabel(prevPeriod)}
+                </button>
+              )}
             </div>
 
             <ol className="divide-y divide-line" aria-label="قائمة طلاب الجلسة">
               {visible.map((s) => {
                 const m = marks.get(s.student_id);
+                const st = m?.status ?? null;
                 const changed = changes.some((c) => c.student_id === s.student_id);
                 const idx = students.indexOf(s) + 1;
+                const noteOpen = openNotes.has(s.student_id) || Boolean(m?.note);
                 return (
-                  <li key={s.student_id} className={cn('grid items-center gap-x-4 gap-y-2.5 px-4 py-4 sm:px-5 md:grid-cols-[2.5rem_minmax(12rem,1fr)_auto_minmax(10rem,15rem)]', changed && 'bg-warning-soft/40')}>
-                    <span className={cn('tabular hidden size-10 place-items-center rounded-full text-sm font-bold md:grid', m?.status ? 'bg-surface-sunken text-fg-muted' : 'border border-dashed border-line-strong text-fg-subtle')}>{formatNumber(idx)}</span>
-                    <div className="min-w-0">
-                      <p className="text-base font-bold leading-snug text-fg-strong">{s.full_name}</p>
-                      <p className="mt-0.5 flex items-center gap-2 text-xs text-fg-muted">
-                        <span className="ltr tabular">{s.student_number}</span>
-                        {!m?.status && <span className="font-semibold text-fg-subtle">· لم يُرصد</span>}
-                        {changed && <span className="font-semibold text-warning">· غير محفوظ</span>}
-                      </p>
+                  <li
+                    key={s.student_id}
+                    className={cn(
+                      'border-s-4 px-4 py-3.5 transition-colors sm:px-5',
+                      st ? STATUS_STYLE[st].edge : 'border-s-transparent',
+                      st && STATUS_STYLE[st].tint,
+                    )}
+                  >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-5">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <span className={cn('tabular grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold', st ? 'bg-surface text-fg-muted ring-1 ring-line' : 'border border-dashed border-line-strong text-fg-subtle')}>
+                          {formatNumber(idx)}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-base font-bold leading-snug text-fg-strong">{s.full_name}</p>
+                          <p className="flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
+                            <span className="ltr tabular">{s.student_number}</span>
+                            {changed && <span className="font-bold text-warning">· غير محفوظ</span>}
+                          </p>
+                        </div>
+                        {!readOnly && !noteOpen && (
+                          <button
+                            type="button"
+                            onClick={() => setOpenNotes((prev) => new Set(prev).add(s.student_id))}
+                            className="grid size-9 shrink-0 place-items-center rounded-full text-fg-subtle transition-colors hover:bg-surface-hover hover:text-fg md:order-last"
+                            aria-label={`إضافة ملاحظة لـ ${s.full_name}`}
+                            title="إضافة ملاحظة"
+                          >
+                            <MessageSquarePlus className="size-[1.15rem]" aria-hidden />
+                          </button>
+                        )}
+                      </div>
+                      <StatusPicker name={s.full_name} value={st} disabled={readOnly} onChange={(v) => setMark(s.student_id, { status: v, minutes_late: v === 'late' ? (m?.minutes_late ?? 5) : null })} />
                     </div>
-                    <StatusPicker id={s.student_id} name={s.full_name} value={m?.status ?? null} disabled={readOnly} onChange={(st) => setMark(s.student_id, { status: st, minutes_late: st === 'late' ? (m?.minutes_late ?? 5) : null })} />
-                    <div className="flex gap-2">
-                      {m?.status === 'late' && (
-                        <label className="flex shrink-0 items-center gap-1 text-xs text-fg-muted">
-                          <Input type="number" min={1} max={300} className="h-11 w-18 px-2 text-center" aria-label={`دقائق تأخر ${s.full_name}`} disabled={readOnly} value={m.minutes_late ?? ''} onChange={(e) => setMark(s.student_id, { minutes_late: e.target.value ? Math.min(300, Math.max(1, Number(e.target.value))) : null })} />
-                          د
-                        </label>
-                      )}
-                      <Input className="h-11 text-sm" placeholder="ملاحظة (اختياري)" aria-label={`ملاحظة ${s.full_name}`} maxLength={500} disabled={readOnly} value={m?.note ?? ''} onChange={(e) => setMark(s.student_id, { note: e.target.value })} />
-                    </div>
+                    {(st === 'late' || noteOpen) && (
+                      <div className="mt-3 flex flex-wrap items-center gap-3 md:ps-12">
+                        {st === 'late' && (
+                          <MinutesStepper value={m?.minutes_late ?? null} disabled={readOnly} label={`دقائق تأخر ${s.full_name}`} onChange={(v) => setMark(s.student_id, { minutes_late: v })} />
+                        )}
+                        {noteOpen && (
+                          <Input
+                            className="h-10 min-w-0 flex-1 basis-56 text-sm"
+                            placeholder="ملاحظة (اختياري)"
+                            aria-label={`ملاحظة ${s.full_name}`}
+                            maxLength={500}
+                            disabled={readOnly}
+                            autoFocus={openNotes.has(s.student_id) && !m?.note}
+                            value={m?.note ?? ''}
+                            onChange={(e) => setMark(s.student_id, { note: e.target.value })}
+                          />
+                        )}
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -367,18 +430,22 @@ export function TakeAttendancePage() {
             </ol>
 
             {!readOnly && (
-              <div className="sticky bottom-0 z-20 flex flex-wrap items-center gap-3 rounded-b-lg border-t border-line bg-surface/95 px-4 py-3 backdrop-blur max-sm:bottom-[calc(4rem+env(safe-area-inset-bottom))]">
-                <p className="hidden text-sm text-fg-muted sm:block" aria-live="polite">
-                  {dirty ? `${formatNumber(changes.length)} تغيير غير محفوظ` : 'لا توجد تغييرات غير محفوظة'}
-                  {!submitted && counts.unmarked > 0 && ` · يتطلب الاعتماد رصد جميع الطلاب (${formatNumber(counts.unmarked)} متبقٍ)`}
-                </p>
-                <div className="flex w-full gap-2 sm:ms-auto sm:w-auto [&>button]:flex-1 sm:[&>button]:flex-none">
+              <div className="sticky bottom-0 z-20 rounded-b-lg border-t border-line bg-surface/95 px-4 py-3 shadow-[0_-8px_20px_-14px_rgb(15_23_42/0.35)] backdrop-blur max-sm:bottom-[calc(4.25rem+env(safe-area-inset-bottom))] sm:px-5">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <p className="hidden text-sm text-fg-muted lg:block" aria-live="polite">
+                    {dirty ? `${formatNumber(changes.length)} تغيير غير محفوظ` : 'لا توجد تغييرات غير محفوظة'}
+                  </p>
                   {submitted ? (
-                    <Button disabled={!dirty} onClick={() => setCorrectionOpen(true)}><Save /> حفظ التصحيح</Button>
+                    <Button className="flex-1 lg:ms-auto lg:flex-none" disabled={!dirty} onClick={() => setCorrectionOpen(true)}><Save /> حفظ التصحيح</Button>
                   ) : (
                     <>
-                      <Button variant="secondary" disabled={!dirty} loading={save.isPending && !save.variables?.submit} onClick={() => persist(false)}><Save /> حفظ كمسودة</Button>
-                      <Button disabled={counts.unmarked > 0} loading={save.isPending && save.variables?.submit} onClick={() => persist(true)}><Send className="rtl:-scale-x-100" /> اعتماد {periodLabel(period)}</Button>
+                      <Button variant="secondary" className="lg:ms-auto" disabled={!dirty} loading={save.isPending && !save.variables?.submit} onClick={() => persist(false)} aria-label="حفظ كمسودة">
+                        <Save /> <span className="hidden sm:inline">حفظ كمسودة</span><span className="sm:hidden">حفظ</span>
+                      </Button>
+                      <Button className="flex-1 lg:flex-none" disabled={counts.unmarked > 0} loading={save.isPending && save.variables?.submit} onClick={() => persist(true)}>
+                        <Send className="rtl:-scale-x-100" />
+                        {counts.unmarked > 0 ? `متبقٍ ${formatNumber(counts.unmarked)} للاعتماد` : `اعتماد ${periodLabel(period)}`}
+                      </Button>
                     </>
                   )}
                 </div>
