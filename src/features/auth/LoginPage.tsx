@@ -257,7 +257,7 @@ export function LoginPage() {
               </span>
             ))}
           </p>
-          <ul className="mt-6 space-y-3 text-[0.9375rem] text-white/90">
+          <ul className="mt-6 space-y-3 text-base text-white/90">
             {FEATURES.map(({ Icon, text }, i) => (
               <m.li key={text} className="flex items-center gap-3" {...rise(0.85 + i * 0.1)}>
                 <m.span initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} transition={{ ...spring.pop, delay: 0.95 + i * 0.1 }}>

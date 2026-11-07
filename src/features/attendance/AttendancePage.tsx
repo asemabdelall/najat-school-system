@@ -146,7 +146,7 @@ export function AttendancePage() {
       <Card>
         <CardHeader
           title="الجلسات السابقة"
-          description="آخر ٦٠ يومًا"
+          description="آخر 60 يومًا"
           actions={
             <>
               <Select aria-label="تصفية حسب الفصل" className="h-9 w-36" value={histClass ?? ''} onChange={(e) => { setHistClass(e.target.value || null); setPage(1); }}>

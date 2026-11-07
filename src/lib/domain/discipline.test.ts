@@ -37,8 +37,8 @@ describe('validateDiscipline', () => {
   it('requires the fields of each type, with the database messages', () => {
     expect(validateDiscipline({ type: 'guardian_summons', reason: 'غياب متكرر' })).toEqual({ meetingAt: 'حدّد موعد الاستدعاء' });
     expect(validateDiscipline({ type: 'suspension', reason: 'شجار', suspensionFrom: '2026-11-10', suspensionTo: '2026-11-09' })).toEqual({ suspensionTo: 'تاريخ النهاية قبل البداية' });
-    expect(validateDiscipline({ type: 'suspension', reason: 'شجار', suspensionFrom: '2026-11-01', suspensionTo: '2026-12-15' })).toEqual({ suspensionTo: 'المدة لا تتجاوز ٣٠ يومًا' });
-    expect(validateDiscipline({ type: 'pledge', reason: 'هاتف', pledgeText: 'قصير' })).toEqual({ pledgeText: 'نص التعهد مطلوب (١٠ أحرف على الأقل)' });
+    expect(validateDiscipline({ type: 'suspension', reason: 'شجار', suspensionFrom: '2026-11-01', suspensionTo: '2026-12-15' })).toEqual({ suspensionTo: 'المدة لا تتجاوز 30 يومًا' });
+    expect(validateDiscipline({ type: 'pledge', reason: 'هاتف', pledgeText: 'قصير' })).toEqual({ pledgeText: 'نص التعهد مطلوب (10 أحرف على الأقل)' });
     expect(validateDiscipline({ type: 'pledge', reason: 'x', pledgeText: 'نص تعهد كامل ومناسب' }).reason).toBeDefined();
   });
 });

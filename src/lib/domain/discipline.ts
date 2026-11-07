@@ -98,15 +98,15 @@ export function validateDiscipline(v: {
   pledgeText?: string;
 }): Partial<Record<'reason' | 'meetingAt' | 'suspensionFrom' | 'suspensionTo' | 'pledgeText', string>> {
   const e: Partial<Record<'reason' | 'meetingAt' | 'suspensionFrom' | 'suspensionTo' | 'pledgeText', string>> = {};
-  if (v.reason.trim().length < 3) e.reason = 'اذكر سبب الإجراء (٣ أحرف على الأقل)';
+  if (v.reason.trim().length < 3) e.reason = 'اذكر سبب الإجراء (3 أحرف على الأقل)';
   if (v.type === 'guardian_summons' && !v.meetingAt) e.meetingAt = 'حدّد موعد الاستدعاء';
   if (v.type === 'suspension') {
     if (!v.suspensionFrom) e.suspensionFrom = 'حدّد تاريخ البداية';
     if (!v.suspensionTo) e.suspensionTo = 'حدّد تاريخ النهاية';
     else if (v.suspensionFrom && v.suspensionTo < v.suspensionFrom) e.suspensionTo = 'تاريخ النهاية قبل البداية';
-    else if (v.suspensionFrom && addDays(v.suspensionFrom, MAX_SUSPENSION_DAYS) < v.suspensionTo) e.suspensionTo = 'المدة لا تتجاوز ٣٠ يومًا';
+    else if (v.suspensionFrom && addDays(v.suspensionFrom, MAX_SUSPENSION_DAYS) < v.suspensionTo) e.suspensionTo = 'المدة لا تتجاوز 30 يومًا';
   }
-  if (v.type === 'pledge' && (v.pledgeText ?? '').trim().length < 10) e.pledgeText = 'نص التعهد مطلوب (١٠ أحرف على الأقل)';
+  if (v.type === 'pledge' && (v.pledgeText ?? '').trim().length < 10) e.pledgeText = 'نص التعهد مطلوب (10 أحرف على الأقل)';
   return e;
 }
 

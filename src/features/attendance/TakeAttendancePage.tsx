@@ -49,14 +49,14 @@ function StatusPicker({ id, name, value, disabled, onChange }: { id: string; nam
             onClick={() => onChange(s)}
             whileTap={disabled ? undefined : { scale: 0.94 }}
             className={cn(
-              'relative inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none',
+              'relative inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-bold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none',
               checked ? 'text-white dark:text-slate-950' : 'text-fg-muted hover:bg-surface hover:text-fg',
             )}
           >
             {checked && (
               <m.span layoutId={`att-${id}`} transition={spring.indicator} className={cn('absolute inset-0 rounded-lg shadow-sm', STATUS_STYLE[s].on)} aria-hidden />
             )}
-            <Icon className="relative size-3.5" aria-hidden />
+            <Icon className="relative size-4" aria-hidden />
             <span className="relative">{ATTENDANCE_LABELS[s]}</span>
           </m.button>
         );
@@ -212,26 +212,26 @@ export function TakeAttendancePage() {
       />
 
       <Card className="no-print mb-4 overflow-hidden">
-        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,16rem)_minmax(10rem,13rem)_1fr]">
+        <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-[minmax(13rem,18rem)_minmax(11rem,14rem)_1fr]">
           <div>
-            <label htmlFor="att-class" className="mb-1 block text-xs font-semibold text-fg-muted">الفصل</label>
+            <label htmlFor="att-class" className="mb-2 block text-sm font-bold text-fg-strong">الفصل</label>
             <Select id="att-class" value={classId ?? ''} onChange={(e) => updateParam('class', e.target.value)}>
               <option value="" disabled>اختر الفصل</option>
               {classes.data?.map((c) => <option key={c.id} value={c.id}>فصل {c.name}</option>)}
             </Select>
           </div>
           <div>
-            <label htmlFor="att-date" className="mb-1 block text-xs font-semibold text-fg-muted">التاريخ</label>
+            <label htmlFor="att-date" className="mb-2 block text-sm font-bold text-fg-strong">التاريخ</label>
             <Input id="att-date" type="date" value={date} max={today} min={minDate} onChange={(e) => e.target.value && updateParam('date', e.target.value)} />
           </div>
           <div className="flex items-end">
-            <p className="rounded-lg bg-surface-sunken px-3 py-2.5 text-sm font-semibold text-fg">
+            <p className="rounded-md bg-brand-soft px-4 py-2.5 text-base font-bold text-brand dark:text-link">
               {formatWeekday(date)} · {formatDate(date)}
             </p>
           </div>
         </div>
         {mode === 'period' && (
-          <div className="space-y-3 border-t border-line bg-surface-sunken/40 p-4">
+          <div className="space-y-3 border-t border-line bg-surface-sunken/40 p-5 sm:px-6">
             <PeriodStrip periods={periods} value={period} stateFor={stateFor} onChange={(p) => updateParam('period', String(p))} />
             {classId && <CompletionLegend />}
           </div>
@@ -319,7 +319,7 @@ export function TakeAttendancePage() {
                     aria-selected={filter === key}
                     onClick={() => setFilter(key)}
                     className={cn(
-                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[0.8125rem] font-semibold transition-colors',
+                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors',
                       filter === key ? 'border-brand bg-brand text-on-brand' : 'border-line hover:border-line-strong',
                     )}
                   >
@@ -327,7 +327,7 @@ export function TakeAttendancePage() {
                     <span className={cn('tabular min-w-6 rounded-full px-1.5 text-center text-xs leading-5', filter === key ? 'bg-white/20 text-on-brand' : tone)}>{formatNumber(n)}</span>
                   </button>
                 ))}
-                <span className="ms-auto hidden items-center gap-3 text-[0.8125rem] text-fg-muted md:flex">
+                <span className="ms-auto hidden items-center gap-3 text-sm text-fg-muted md:flex">
                   <span>{ATTENDANCE_LABELS.present}: <b className="tabular text-success">{formatNumber(counts.present)}</b></span>
                   <span>{ATTENDANCE_LABELS.excused}: <b className="tabular text-info">{formatNumber(counts.excused)}</b></span>
                 </span>
@@ -340,11 +340,11 @@ export function TakeAttendancePage() {
                 const changed = changes.some((c) => c.student_id === s.student_id);
                 const idx = students.indexOf(s) + 1;
                 return (
-                  <li key={s.student_id} className={cn('grid items-center gap-x-3 gap-y-2 px-4 py-3 md:grid-cols-[2.25rem_minmax(12rem,1fr)_auto_minmax(10rem,15rem)]', changed && 'bg-warning-soft/40')}>
-                    <span className={cn('tabular hidden size-9 place-items-center rounded-full text-sm font-bold md:grid', m?.status ? 'bg-surface-sunken text-fg-muted' : 'border border-dashed border-line-strong text-fg-subtle')}>{formatNumber(idx)}</span>
+                  <li key={s.student_id} className={cn('grid items-center gap-x-4 gap-y-2.5 px-4 py-4 sm:px-5 md:grid-cols-[2.5rem_minmax(12rem,1fr)_auto_minmax(10rem,15rem)]', changed && 'bg-warning-soft/40')}>
+                    <span className={cn('tabular hidden size-10 place-items-center rounded-full text-sm font-bold md:grid', m?.status ? 'bg-surface-sunken text-fg-muted' : 'border border-dashed border-line-strong text-fg-subtle')}>{formatNumber(idx)}</span>
                     <div className="min-w-0">
-                      <p className="font-semibold leading-snug">{s.full_name}</p>
-                      <p className="flex items-center gap-2 text-xs text-fg-muted">
+                      <p className="text-base font-bold leading-snug text-fg-strong">{s.full_name}</p>
+                      <p className="mt-0.5 flex items-center gap-2 text-xs text-fg-muted">
                         <span className="ltr tabular">{s.student_number}</span>
                         {!m?.status && <span className="font-semibold text-fg-subtle">· لم يُرصد</span>}
                         {changed && <span className="font-semibold text-warning">· غير محفوظ</span>}
@@ -354,11 +354,11 @@ export function TakeAttendancePage() {
                     <div className="flex gap-2">
                       {m?.status === 'late' && (
                         <label className="flex shrink-0 items-center gap-1 text-xs text-fg-muted">
-                          <Input type="number" min={1} max={300} className="h-9 w-16 px-2 text-center" aria-label={`دقائق تأخر ${s.full_name}`} disabled={readOnly} value={m.minutes_late ?? ''} onChange={(e) => setMark(s.student_id, { minutes_late: e.target.value ? Math.min(300, Math.max(1, Number(e.target.value))) : null })} />
+                          <Input type="number" min={1} max={300} className="h-11 w-18 px-2 text-center" aria-label={`دقائق تأخر ${s.full_name}`} disabled={readOnly} value={m.minutes_late ?? ''} onChange={(e) => setMark(s.student_id, { minutes_late: e.target.value ? Math.min(300, Math.max(1, Number(e.target.value))) : null })} />
                           د
                         </label>
                       )}
-                      <Input className="h-9 text-xs" placeholder="ملاحظة (اختياري)" aria-label={`ملاحظة ${s.full_name}`} maxLength={500} disabled={readOnly} value={m?.note ?? ''} onChange={(e) => setMark(s.student_id, { note: e.target.value })} />
+                      <Input className="h-11 text-sm" placeholder="ملاحظة (اختياري)" aria-label={`ملاحظة ${s.full_name}`} maxLength={500} disabled={readOnly} value={m?.note ?? ''} onChange={(e) => setMark(s.student_id, { note: e.target.value })} />
                     </div>
                   </li>
                 );
@@ -368,7 +368,7 @@ export function TakeAttendancePage() {
 
             {!readOnly && (
               <div className="sticky bottom-0 z-20 flex flex-wrap items-center gap-3 rounded-b-lg border-t border-line bg-surface/95 px-4 py-3 backdrop-blur max-sm:bottom-[calc(4rem+env(safe-area-inset-bottom))]">
-                <p className="hidden text-[0.8125rem] text-fg-muted sm:block" aria-live="polite">
+                <p className="hidden text-sm text-fg-muted sm:block" aria-live="polite">
                   {dirty ? `${formatNumber(changes.length)} تغيير غير محفوظ` : 'لا توجد تغييرات غير محفوظة'}
                   {!submitted && counts.unmarked > 0 && ` · يتطلب الاعتماد رصد جميع الطلاب (${formatNumber(counts.unmarked)} متبقٍ)`}
                 </p>

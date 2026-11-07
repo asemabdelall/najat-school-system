@@ -19,7 +19,7 @@ import { Logo } from '@/components/layout/Logo';
 /** Same rule the admin Edge Function applies to temporary passwords. */
 const newPassword = z
   .string()
-  .min(10, 'كلمة المرور يجب أن تكون ١٠ أحرف على الأقل')
+  .min(10, 'كلمة المرور يجب أن تكون 10 أحرف على الأقل')
   .max(72, 'كلمة المرور طويلة جدًا')
   .regex(/[A-Za-z]/, 'يجب أن تحتوي على حرف إنجليزي واحد على الأقل')
   .regex(/[0-9]/, 'يجب أن تحتوي على رقم واحد على الأقل');
@@ -108,7 +108,7 @@ export function ChangePasswordForm({ requireCurrent, onDone }: { requireCurrent:
           <Input type="password" autoComplete="current-password" dir="ltr" className="text-start" {...form.register('current')} />
         </Field>
       )}
-      <Field label="كلمة المرور الجديدة" htmlFor="pw-new" required error={errs.password?.message} hint="١٠ أحرف على الأقل، تجمع حروفًا إنجليزية وأرقامًا.">
+      <Field label="كلمة المرور الجديدة" htmlFor="pw-new" required error={errs.password?.message} hint="10 أحرف على الأقل، تجمع حروفًا إنجليزية وأرقامًا.">
         <Input type="password" autoComplete="new-password" dir="ltr" className="text-start" {...form.register('password')} />
       </Field>
       <Field label="تأكيد كلمة المرور الجديدة" htmlFor="pw-confirm" required error={errs.confirm?.message}>

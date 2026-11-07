@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CalendarCheck2, CheckCircle2, Clock, FileClock, Flag, GraduationCap, ListChecks, Percent, School, UserX } from 'lucide-react';
+import { AlertTriangle, BarChart3, CalendarCheck2, CheckCircle2, Clock, FileClock, Flag, Gavel, GraduationCap, ListChecks, Percent, School, Sparkles, Users, UserX } from 'lucide-react';
+import type { Permission } from '@/lib/domain/permissions';
+import { useDocumentTitle } from '@/lib/hooks';
 import { useAuth } from '@/auth/AuthProvider';
-import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
@@ -36,18 +37,18 @@ function useRange(key: RangeKey, yearStart?: string) {
   const last = previousSchoolDay(today);
   switch (key) {
     case 'today': return { from: last, to: last, label: last === today ? 'اليوم' : `آخر يوم دراسي (${formatWeekday(last)})` };
-    case 'week': return { from: addDays(today, -6), to: today, label: 'آخر ٧ أيام' };
+    case 'week': return { from: addDays(today, -6), to: today, label: 'آخر 7 أيام' };
     case 'month': return { from: startOfMonth(today), to: today, label: 'الشهر الحالي' };
     case 'year': return { from: yearStart ?? startOfMonth(today), to: today, label: 'منذ بداية العام' };
   }
 }
 
 function RangePicker({ value, onChange }: { value: RangeKey; onChange: (v: RangeKey) => void }) {
-  const opts: [RangeKey, string][] = [['today', 'اليوم'], ['week', '٧ أيام'], ['month', 'الشهر'], ['year', 'العام']];
+  const opts: [RangeKey, string][] = [['today', 'اليوم'], ['week', '7 أيام'], ['month', 'الشهر'], ['year', 'العام']];
   return (
-    <div role="radiogroup" aria-label="الفترة الزمنية" className="inline-flex rounded-md border border-line bg-surface-sunken p-0.5">
+    <div role="radiogroup" aria-label="الفترة الزمنية" className="inline-flex rounded-lg border border-line bg-surface p-1 shadow-xs">
       {opts.map(([k, l]) => (
-        <button key={k} role="radio" aria-checked={value === k} onClick={() => onChange(k)} className={cn('h-8 rounded px-3 text-[0.8125rem] font-semibold text-fg-muted', value === k && 'bg-surface text-brand shadow-sm dark:text-link')}>
+        <button key={k} role="radio" aria-checked={value === k} onClick={() => onChange(k)} className={cn('h-9 rounded-md px-4 text-sm font-bold text-fg-muted transition-colors hover:text-fg', value === k && 'bg-brand text-white shadow-sm hover:text-white')}>
           {l}
         </button>
       ))}
@@ -89,13 +90,16 @@ function ManagerDashboard() {
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-fg-muted">مؤشرات الحضور للفترة: <span className="font-bold text-fg">{range.label}</span> ({formatDate(range.from)}{range.from !== range.to && ` – ${formatDate(range.to)}`})</p>
+        <div>
+          <h2 className="text-lg font-extrabold">مؤشرات الحضور · {range.label}</h2>
+          <p className="text-sm text-fg-muted tabular">{formatDate(range.from)}{range.from !== range.to && ` – ${formatDate(range.to)}`}</p>
+        </div>
         <RangePicker value={rangeKey} onChange={setRangeKey} />
       </div>
       {overview.isError ? (
         <Card className="mb-5"><ErrorState error={overview.error} onRetry={() => overview.refetch()} /></Card>
       ) : (
-        <Stagger className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stagger className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard loading={loading} label="الطلاب المنتظمون" value={<AnimatedNumber value={o?.active_students} />} hint={`${formatNumber(o?.active_enrollments)} تسجيل في ${formatNumber(o?.classes)} فصلًا`} icon={<GraduationCap />} to="/students" />
           <StatCard loading={loading} label="نسبة الحضور" value={<AnimatedNumber value={o?.attendance_rate} format={formatPercent} />} hint={`من ${formatNumber((o?.present ?? 0) + (o?.late ?? 0) + (o?.absent ?? 0) + (o?.excused ?? 0))} سجل مرصود`} icon={<Percent />} tone="success" to="/reports" />
           <StatCard loading={loading} label="حالات الغياب" value={<AnimatedNumber value={o?.absent} />} hint={`${formatNumber(o?.excused)} غياب بعذر · ${formatNumber(o?.late)} تأخر`} icon={<UserX />} tone="danger" to="/reports" />
@@ -134,10 +138,10 @@ function ManagerDashboard() {
             <ul className="divide-y divide-line">
               {incidents.data.map((i) => (
                 <li key={i.id}>
-                  <Link to={`/behavior/${i.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-hover">
+                  <Link to={`/behavior/${i.id}`} className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface-hover sm:px-6">
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{i.behavior_categories?.name}</span>
-                      <span className="text-xs text-fg-muted">{formatDate(i.incident_date)} · {formatNumber(i.incident_students[0]?.count ?? 0)} طالب</span>
+                      <span className="block truncate text-base font-bold">{i.behavior_categories?.name}</span>
+                      <span className="text-sm text-fg-muted">{formatDate(i.incident_date)} · {formatNumber(i.incident_students[0]?.count ?? 0)} طالب</span>
                     </span>
                     <IncidentStatusBadge status={i.status as IncidentStatus} />
                   </Link>
@@ -154,10 +158,10 @@ function ManagerDashboard() {
             <ul className="divide-y divide-line">
               {overdue.data.map((t) => (
                 <li key={t.id}>
-                  <Link to={`/follow-ups/${t.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-hover">
+                  <Link to={`/follow-ups/${t.id}`} className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface-hover sm:px-6">
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{t.title}</span>
-                      <span className="text-xs text-fg-muted">{t.assignee?.full_name}</span>
+                      <span className="block truncate text-base font-bold">{t.title}</span>
+                      <span className="text-sm text-fg-muted">{t.assignee?.full_name}</span>
                     </span>
                     <DueBadge state={dueState(t.status as FollowUpStatus, t.due_date, today)} dueDate={t.due_date} today={today} />
                   </Link>
@@ -206,7 +210,7 @@ function TeacherDashboard() {
 
   return (
     <>
-      <Stagger className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Stagger className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard loading={classes.isPending} label="فصولي" value={<AnimatedNumber value={classes.data?.length} />} hint={`${formatNumber(totalStudents)} طالب`} icon={<School />} to="/classes" />
         <StatCard loading={sessions.isPending} label="جلسات بانتظار الاعتماد" value={<AnimatedNumber value={pendingSlots} />} hint={isSchoolDay(today) ? 'لليوم' : `لـ ${formatWeekday(day)}`} icon={<Clock />} tone={pendingSlots ? 'warning' : 'success'} to="/attendance" />
         <StatCard loading={tasks.isPending} label="مهامي النشطة" value={<AnimatedNumber value={tasks.data?.length} />} icon={<ListChecks />} to="/follow-ups" />
@@ -247,10 +251,10 @@ function TeacherDashboard() {
               <ul className="divide-y divide-line">
                 {tasks.data!.map((t) => (
                   <li key={t.id}>
-                    <Link to={`/follow-ups/${t.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-hover">
+                    <Link to={`/follow-ups/${t.id}`} className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface-hover sm:px-6">
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{t.title}</span>
-                        <span className="text-xs text-fg-muted">{t.students?.full_name ?? '—'} · {formatDate(t.due_date)}</span>
+                        <span className="block truncate text-base font-bold">{t.title}</span>
+                        <span className="text-sm text-fg-muted">{t.students?.full_name ?? '—'} · {formatDate(t.due_date)}</span>
                       </span>
                       <span className="flex flex-col items-end gap-1"><FollowUpStatusBadge status={t.status as FollowUpStatus} /><DueBadge state={dueState(t.status as FollowUpStatus, t.due_date, today)} dueDate={t.due_date} today={today} /></span>
                     </Link>
@@ -264,7 +268,7 @@ function TeacherDashboard() {
             {myIncidents.isPending ? <LoadingState rows={2} /> : (myIncidents.data ?? []).length === 0 ? <EmptyState title="لم ترفع أي بلاغ" className="py-8" /> : (
               <ul className="divide-y divide-line">
                 {myIncidents.data!.map((i) => (
-                  <li key={i.id}><Link to={`/behavior/${i.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-hover"><span className="text-sm"><span className="font-semibold">{i.behavior_categories?.name}</span> <span className="text-xs text-fg-muted">· {formatDate(i.incident_date)}</span></span><IncidentStatusBadge status={i.status as IncidentStatus} /></Link></li>
+                  <li key={i.id}><Link to={`/behavior/${i.id}`} className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface-hover sm:px-6"><span className="text-sm"><span className="font-semibold">{i.behavior_categories?.name}</span> <span className="text-sm text-fg-muted">· {formatDate(i.incident_date)}</span></span><IncidentStatusBadge status={i.status as IncidentStatus} /></Link></li>
                 ))}
               </ul>
             )}
@@ -275,21 +279,76 @@ function TeacherDashboard() {
   );
 }
 
-export function DashboardPage() {
-  const { isManager, profile } = useAuth();
+type QuickAction = { to: string; label: string; hint: string; icon: React.ElementType; permission: Permission };
+
+const QUICK_ACTIONS: QuickAction[] = [
+  { to: '/attendance/take', label: 'رصد الحضور', hint: 'سجّل حضور فصل الآن', icon: CalendarCheck2, permission: 'attendance.take' },
+  { to: '/behavior/new', label: 'رفع بلاغ', hint: 'ملاحظة سلوكية جديدة', icon: Flag, permission: 'behavior.report' },
+  { to: '/students', label: 'البحث عن طالب', hint: 'الملف والسجلات', icon: Users, permission: 'students.view' },
+  { to: '/discipline/new', label: 'إجراء انضباطي', hint: 'استدعاء أو تعهد أو فصل', icon: Gavel, permission: 'discipline.manage' },
+  { to: '/reports', label: 'التقارير', hint: 'إحصاءات وتصدير', icon: BarChart3, permission: 'reports.view' },
+];
+
+/** Greeting banner with the day's big shortcuts. */
+function WelcomeHero() {
+  const { profile, can } = useAuth();
   const today = kuwaitToday();
+  const year = useCurrentYear();
+  const [hello] = React.useState(() => {
+    const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuwait', hour: '2-digit', hour12: false }).format(new Date()));
+    return h >= 4 && h < 12 ? 'صباح الخير' : 'مساء الخير';
+  });
+  const actions = QUICK_ACTIONS.filter((a) => can(a.permission)).slice(0, 4);
+  const name = profile?.full_name.replace(/\s*\(.*\)$/, '') ?? '';
+  return (
+    <section className="relative mb-6 overflow-hidden rounded-xl text-white shadow-lg [background:var(--brand-gradient-deep)]">
+      <span className="arch pointer-events-none absolute -bottom-28 end-[6%] h-72 w-48 border-2 border-white/10" aria-hidden />
+      <span className="arch pointer-events-none absolute -bottom-28 end-[19%] h-56 w-32 bg-white/[0.05]" aria-hidden />
+      <span className="pointer-events-none absolute -top-24 start-[-8%] size-80 rounded-full bg-teal/30 blur-3xl" aria-hidden />
+      <div className="relative p-5 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1 text-xs font-bold text-white/90 ring-1 ring-white/15">
+              <Sparkles className="size-3.5 text-leaf" aria-hidden /> {hello}
+            </p>
+            <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-white sm:text-[1.9rem]">مرحبًا، {name}</h1>
+            <p className="mt-1.5 text-sm text-white/80">
+              {formatWeekday(today)} <span className="tabular">{formatDate(today)}</span>
+              {year.data && <> · العام الدراسي <span className="tabular">{year.data.name}</span></>}
+            </p>
+          </div>
+        </div>
+        {actions.length > 0 && (
+          <Stagger className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {actions.map((a) => (
+              <StaggerItem key={a.to}>
+                <Link
+                  to={a.to}
+                  className="group flex h-full flex-col items-start gap-2.5 rounded-lg bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-white/[0.18] sm:flex-row sm:items-center sm:gap-3 sm:p-4"
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-sm sm:size-11">
+                    <a.icon className="size-5" aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[0.95rem] font-extrabold leading-snug sm:truncate sm:text-base">{a.label}</span>
+                    <span className="hidden truncate text-xs text-white/75 sm:block">{a.hint}</span>
+                  </span>
+                </Link>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function DashboardPage() {
+  const { isManager } = useAuth();
+  useDocumentTitle('لوحة التحكم');
   return (
     <>
-      <PageHeader
-        title={`مرحبًا، ${profile?.full_name.replace(/\s*\(.*\)$/, '') ?? ''}`}
-        description={`${formatWeekday(today)} ${formatDate(today)}`}
-        actions={
-          <>
-            <Button asChild variant="secondary"><Link to="/behavior/new"><Flag /> رفع بلاغ</Link></Button>
-            <Button asChild><Link to="/attendance/take"><CalendarCheck2 /> رصد الحضور</Link></Button>
-          </>
-        }
-      />
+      <WelcomeHero />
       {isManager ? <ManagerDashboard /> : <TeacherDashboard />}
     </>
   );

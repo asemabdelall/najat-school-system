@@ -76,7 +76,7 @@ export function ImportStudentsPage() {
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setFileError('حجم الملف أكبر من ٥ ميغابايت.');
+      setFileError('حجم الملف أكبر من 5 ميغابايت.');
       return;
     }
     setReading(true);

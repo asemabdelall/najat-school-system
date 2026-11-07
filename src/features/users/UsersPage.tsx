@@ -62,7 +62,7 @@ function CreateUserDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
             setError(null);
             if (v.full_name.trim().length < 2) return setError('الاسم مطلوب');
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) return setError('البريد الإلكتروني غير صالح');
-            if (!passwordOk(v.password)) return setError('كلمة المرور: ١٠ أحرف على الأقل وتتضمن حروفًا وأرقامًا');
+            if (!passwordOk(v.password)) return setError('كلمة المرور: 10 أحرف على الأقل وتتضمن حروفًا وأرقامًا');
             if (!v.roles.length) return setError('اختر صلاحية واحدة على الأقل');
             try {
               await create.mutateAsync();
@@ -76,9 +76,9 @@ function CreateUserDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <Field label="الاسم الكامل" htmlFor="u-name" required><Input value={v.full_name} onChange={(e) => setV({ ...v, full_name: e.target.value })} /></Field>
           <Field label="المسمى الوظيفي" htmlFor="u-title" hint="مثال: أخصائي اجتماعي، مشرف تربوي، معلم رياضيات. لا يغيّر الصلاحيات."><Input value={v.job_title} maxLength={60} onChange={(e) => setV({ ...v, job_title: e.target.value })} /></Field>
           <Field label="البريد الإلكتروني" htmlFor="u-email" required><Input type="email" dir="ltr" className="text-start" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} /></Field>
-          <Field label="كلمة مرور مؤقتة" htmlFor="u-pass" required hint="١٠ أحرف على الأقل، حروف وأرقام."><Input type="text" dir="ltr" className="text-start" autoComplete="new-password" value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} /></Field>
+          <Field label="كلمة مرور مؤقتة" htmlFor="u-pass" required hint="10 أحرف على الأقل، حروف وأرقام."><Input type="text" dir="ltr" className="text-start" autoComplete="new-password" value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} /></Field>
           <fieldset>
-            <legend className="mb-1.5 text-[0.8125rem] font-semibold">الصلاحيات</legend>
+            <legend className="mb-1.5 text-sm font-semibold">الصلاحيات</legend>
             <div className="flex flex-wrap gap-4">
               {ROLES.map((r) => (
                 <label key={r} className="flex items-center gap-1.5 text-sm">
@@ -223,7 +223,7 @@ export function UsersPage() {
           pending?.kind === 'password' ? (
             <div className="space-y-2">
               <p>ستُستبدل كلمة المرور الحالية بكلمة مؤقتة، وسيُطلب من الموظف تغييرها عند دخوله التالي. سلّمها له بشكل آمن.</p>
-              <Input aria-label="كلمة المرور الجديدة" dir="ltr" className="text-start" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="١٠ أحرف على الأقل، حروف وأرقام" />
+              <Input aria-label="كلمة المرور الجديدة" dir="ltr" className="text-start" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="10 أحرف على الأقل، حروف وأرقام" />
             </div>
           ) : pending?.kind === 'deactivate' ? 'لن يتمكن الموظف من تسجيل الدخول، وتُوقف صلاحياته فورًا. تبقى سجلاته التاريخية محفوظة.'
           : pending?.kind === 'grant' || pending?.kind === 'revoke' ? `صلاحية «${ROLE_LABELS[pending.role]}». يُسجَّل التغيير في سجل التدقيق ويُشعَر الموظف.`
@@ -233,7 +233,7 @@ export function UsersPage() {
         tone={pending?.kind === 'deactivate' || pending?.kind === 'revoke' ? 'danger' : 'primary'}
         loading={act.isPending}
         onConfirm={async () => {
-          if (pending?.kind === 'password' && !passwordOk(newPassword)) return toast.error('كلمة المرور: ١٠ أحرف على الأقل وتتضمن حروفًا وأرقامًا');
+          if (pending?.kind === 'password' && !passwordOk(newPassword)) return toast.error('كلمة المرور: 10 أحرف على الأقل وتتضمن حروفًا وأرقامًا');
           try {
             await act.mutateAsync(pending!);
             toast.success('تم تنفيذ العملية');

@@ -23,7 +23,7 @@ export function LoadingState({ rows = 5, className }: { rows?: number; className
   return (
     <div className={cn('space-y-2.5 p-5', className)} role="status" aria-label="جارٍ التحميل">
       {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-9" />
+        <Skeleton key={i} className="h-11" />
       ))}
       <span className="sr-only">جارٍ التحميل…</span>
     </div>
@@ -38,17 +38,17 @@ export function EmptyState({ icon, title, description, action, className }: {
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center px-6 py-12 text-center', className)}>
+    <div className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)}>
       <m.span
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={spring.pop}
-        className="mb-3 grid size-12 place-items-center rounded-full bg-surface-sunken text-fg-subtle [&_svg]:size-6"
+        className="mb-4 grid size-16 place-items-center rounded-2xl bg-brand-soft text-brand dark:text-link [&_svg]:size-7"
       >
         {icon ?? <Inbox />}
       </m.span>
-      <p className="font-bold text-fg">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-fg-muted">{description}</p>}
+      <p className="text-lg font-extrabold text-fg-strong">{title}</p>
+      {description && <p className="mt-1.5 max-w-md text-sm text-fg-muted">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

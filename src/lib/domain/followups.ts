@@ -1,6 +1,6 @@
 import { diffDays, formatNumber } from '../format';
 
-/** Arabic day count with dual/plural agreement: يومًا واحدًا، يومين، ٣ أيام، ١١ يومًا */
+/** Arabic day count with dual/plural agreement: يومًا واحدًا، يومين، 3 أيام، 11 يومًا */
 export function arabicDays(n: number): string {
   if (n === 1) return 'يومًا واحدًا';
   if (n === 2) return 'يومين';

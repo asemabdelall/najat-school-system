@@ -32,7 +32,7 @@ export function validateRange(from: string, to: string, maxDays = 400): string |
   if (!from || !to) return 'حدد تاريخ البداية والنهاية';
   if (to < from) return 'تاريخ النهاية يسبق تاريخ البداية';
   const days = (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000;
-  if (days > maxDays) return 'الفترة طويلة جدًا (الحد الأقصى ٤٠٠ يوم)';
+  if (days > maxDays) return 'الفترة طويلة جدًا (الحد الأقصى 400 يوم)';
   return null;
 }
 

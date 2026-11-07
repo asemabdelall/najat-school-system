@@ -13,12 +13,12 @@ export function CardHeader({ className, title, description, actions, icon }: {
   icon?: React.ReactNode;
 }) {
   return (
-    <div className={cn('flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4', className)}>
-      <div className="flex min-w-0 items-start gap-3">
-        {icon && <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-md bg-brand-soft text-brand dark:text-link [&_svg]:size-4">{icon}</span>}
+    <div className={cn('flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4 sm:px-6', className)}>
+      <div className="flex min-w-0 items-center gap-3">
+        {icon && <span className="grid size-10 shrink-0 place-items-center rounded-md bg-brand-soft text-brand dark:text-link [&_svg]:size-5">{icon}</span>}
         <div className="min-w-0">
-          <h2 className="text-[0.9375rem] font-bold">{title}</h2>
-          {description && <p className="text-[0.8125rem] text-fg-muted">{description}</p>}
+          <h2 className="text-base font-extrabold">{title}</h2>
+          {description && <p className="text-sm text-fg-muted">{description}</p>}
         </div>
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -27,5 +27,5 @@ export function CardHeader({ className, title, description, actions, icon }: {
 }
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-5', className)} {...props} />;
+  return <div className={cn('p-5 sm:p-6', className)} {...props} />;
 }

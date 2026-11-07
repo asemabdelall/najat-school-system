@@ -21,6 +21,13 @@ export function StudentStatusBadge({ status }: { status: string }) {
   return <Badge tone={tone}>{STUDENT_STATUS_LABELS[status] ?? status}</Badge>;
 }
 
+/** Two-letter initials («المنصور» → «م»). */
+export function nameInitials(full: string) {
+  const parts = full.trim().split(/\s+/);
+  const first = (w?: string) => (w ? w.replace(/^ال(?=..)/, '')[0] : '');
+  return first(parts[0]) + (parts.length > 1 ? first(parts[parts.length - 1]) : '');
+}
+
 export function StudentsPage() {
   const { can } = useAuth();
   const navigate = useNavigate();
@@ -89,8 +96,8 @@ export function StudentsPage() {
       />
 
       <Card>
-        <div className="no-print grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,2fr)_repeat(4,minmax(8rem,1fr))_auto]">
-          <div className="relative">
+        <div className="no-print grid grid-cols-2 gap-3 border-b border-line p-4 sm:p-5 lg:grid-cols-[minmax(14rem,2fr)_repeat(4,minmax(8rem,1fr))_auto]">
+          <div className="relative col-span-2 lg:col-span-1">
             <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
             <label htmlFor="student-search" className="sr-only">
               بحث بالاسم أو الرقم الطلابي
@@ -162,8 +169,8 @@ export function StudentsPage() {
             <Table caption="قائمة الطلاب" className={query.isFetching ? 'opacity-70 transition-opacity' : ''}>
               <THead>
                 <Tr>
-                  <Th>الرقم الطلابي</Th>
                   <Th>اسم الطالب</Th>
+                  <Th className="hidden sm:table-cell">الرقم الطلابي</Th>
                   <Th>الفصل</Th>
                   <Th>الحالة</Th>
                   {can('students.manage') && <Th className="hidden md:table-cell">هاتف ولي الأمر</Th>}
@@ -172,17 +179,25 @@ export function StudentsPage() {
               <TBody>
                 {query.data.rows.map((s) => (
                   <Tr key={s.id} className="cursor-pointer hover:bg-surface-hover" onClick={() => navigate(`/students/${s.id}`)}>
-                    <Td className="whitespace-nowrap text-fg-muted"><span className="ltr tabular">{s.student_number}</span></Td>
                     <Td>
-                      <Link to={`/students/${s.id}`} className="font-semibold text-fg hover:text-link hover:underline" onClick={(e) => e.stopPropagation()}>
-                        {s.full_name}
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-extrabold text-brand dark:text-link" aria-hidden>
+                          {nameInitials(s.full_name)}
+                        </span>
+                        <div className="min-w-0">
+                          <Link to={`/students/${s.id}`} className="block font-bold text-fg-strong hover:text-link hover:underline" onClick={(e) => e.stopPropagation()}>
+                            {s.full_name}
+                          </Link>
+                          <span className="ltr tabular block text-end text-xs text-fg-muted sm:hidden">{s.student_number}</span>
+                        </div>
+                      </div>
                     </Td>
+                    <Td className="hidden whitespace-nowrap text-fg-muted sm:table-cell"><span className="ltr tabular">{s.student_number}</span></Td>
                     <Td className="whitespace-nowrap">
                       {s.class_name ? (
-                        <span>
+                        <span className="inline-flex items-center rounded-md bg-surface-sunken px-2.5 py-1 font-bold tabular">
                           {s.class_name}
-                          {s.enrollment_status !== 'active' && <span className="ms-1 text-xs text-fg-muted">(سابق)</span>}
+                          {s.enrollment_status !== 'active' && <span className="ms-1 text-xs font-normal text-fg-muted">(سابق)</span>}
                         </span>
                       ) : (
                         <span className="text-fg-subtle">غير مسجل</span>

@@ -8,7 +8,8 @@
  * displayed in Asia/Kuwait.
  */
 export const KUWAIT_TZ = 'Asia/Kuwait';
-export const LOCALE = 'ar-KW';
+/** Arabic text with Western digits (0-9): clearer at a glance, and consistent with IDs, phones and years. */
+export const LOCALE = 'ar-KW-u-nu-latn';
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -82,10 +83,10 @@ export function formatNumber(value: number | null | undefined): string {
   return value == null ? '—' : numberFmt.format(value);
 }
 export function formatPercent(value: number | null | undefined): string {
-  return value == null ? '—' : `${percentFmt.format(value)}٪`;
+  return value == null ? '—' : `${percentFmt.format(value)}%`;
 }
 
-/** Relative description of a timestamp, e.g. "منذ ٥ دقائق". */
+/** Relative description of a timestamp, e.g. "منذ 5 دقائق". */
 export function formatRelative(value: string, now: Date = new Date()): string {
   const seconds = Math.round((new Date(value).getTime() - now.getTime()) / 1000);
   const rtf = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' });

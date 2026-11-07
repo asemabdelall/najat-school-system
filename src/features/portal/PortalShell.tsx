@@ -51,8 +51,8 @@ function Avatar({ name, className }: { name: string; className?: string }) {
 
 function SidebarNav() {
   return (
-    <nav aria-label="أقسام البوابة" className="flex-1 overflow-y-auto px-3 pb-4">
-      <ul className="space-y-0.5">
+    <nav aria-label="أقسام البوابة" className="flex-1 overflow-y-auto px-4 pb-4">
+      <ul className="space-y-1">
         {NAV.map((item) => (
           <li key={item.to}>
             <NavLink
@@ -60,19 +60,17 @@ function SidebarNav() {
               end={'end' in item ? item.end : undefined}
               className={({ isActive }) =>
                 cn(
-                  'group relative flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors duration-200',
-                  isActive ? 'text-brand dark:text-link' : 'text-fg-muted hover:bg-surface/60 hover:text-fg dark:hover:bg-surface-hover',
+                  'group relative flex h-12 items-center gap-3 rounded-md px-3 text-base font-bold transition-colors duration-200',
+                  isActive ? 'text-white' : 'text-fg-muted hover:bg-surface hover:text-fg-strong dark:hover:bg-surface-hover',
                 )
               }
             >
               {({ isActive }) => (
                 <>
                   {isActive && (
-                    <m.span layoutId="portal-nav-pill" transition={spring.indicator} className="absolute inset-0 rounded-md bg-surface shadow-sm dark:bg-surface-selected" aria-hidden>
-                      <span className="absolute inset-y-2 start-0 w-1 rounded-full bg-leaf" />
-                    </m.span>
+                    <m.span layoutId="portal-nav-pill" transition={spring.indicator} className="absolute inset-0 rounded-md shadow-[0_8px_20px_-8px_rgb(0_77_114/0.7)] [background:var(--brand-gradient-deep)]" aria-hidden />
                   )}
-                  <item.icon className="relative size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" aria-hidden />
+                  <item.icon className="relative size-5 shrink-0 transition-transform duration-200 group-hover:scale-110" aria-hidden />
                   <span className="relative truncate">{item.label}</span>
                 </>
               )}
@@ -114,7 +112,7 @@ function AccountMenu({ d, onPassword }: { d: PortalData; onPassword: () => void 
         <button className="flex items-center gap-2 rounded-full p-0.5 transition-colors hover:bg-surface-hover sm:rounded-md sm:px-1.5 sm:py-1" aria-label="قائمة الحساب">
           <Avatar name={d.student.full_name} className="size-8 text-xs" />
           <span className="hidden min-w-0 text-start leading-tight md:block">
-            <span className="block max-w-40 truncate text-[0.8125rem] font-bold text-fg">{shortName(d.student.full_name)}</span>
+            <span className="block max-w-40 truncate text-sm font-bold text-fg">{shortName(d.student.full_name)}</span>
             <span className="block text-2xs text-fg-muted">طالب وولي أمر</span>
           </span>
         </button>
@@ -290,7 +288,7 @@ export function PortalShell() {
   const d = query.data;
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr] print:!block">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[18.5rem_1fr] print:!block">
       <a href="#portal-main" className="sr-only z-50 rounded-md bg-brand px-4 py-2 text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4">
         تخطَّ إلى المحتوى
       </a>
@@ -301,7 +299,7 @@ export function PortalShell() {
           <Link to="/portal" className="flex items-center gap-3 rounded-lg" aria-label="الرئيسية">
             <Logo className="h-14" />
             <div className="min-w-0 leading-tight">
-              <p className="truncate text-[0.9375rem] font-bold text-fg-strong">{d.school ?? SCHOOL}</p>
+              <p className="truncate text-base font-bold text-fg-strong">{d.school ?? SCHOOL}</p>
               <p className="mt-0.5 text-xs text-fg-muted">بوابة ولي الأمر والطالب</p>
             </div>
           </Link>

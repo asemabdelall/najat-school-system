@@ -17,7 +17,7 @@ const schema = z.object({
   section: z.string().trim().min(1, 'رقم/رمز الشعبة مطلوب').max(10),
   name: z.string().trim().min(1, 'اسم الفصل مطلوب').max(40),
   track: z.enum(['general', 'science', 'literary']),
-  capacity: z.string().refine((v) => v === '' || (Number(v) >= 1 && Number(v) <= 60), 'السعة بين ١ و٦٠'),
+  capacity: z.string().refine((v) => v === '' || (Number(v) >= 1 && Number(v) <= 60), 'السعة بين 1 و60'),
   room: z.string().trim().max(40),
 });
 type Values = z.infer<typeof schema>;

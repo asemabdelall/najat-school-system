@@ -21,8 +21,8 @@ describe('due-date state', () => {
     expect(dueLabel('due_soon', '2026-10-28', today)).toBe('تستحق غدًا');
   });
   it('uses Arabic number agreement', () => {
-    expect(arabicDays(5)).toBe('٥ أيام');
-    expect(arabicDays(11)).toBe('١١ يومًا');
+    expect(arabicDays(5)).toBe('5 أيام');
+    expect(arabicDays(11)).toBe('11 يومًا');
   });
 });
 

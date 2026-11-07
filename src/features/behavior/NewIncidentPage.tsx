@@ -25,7 +25,7 @@ const schema = z.object({
   incident_date: z.string().min(1, 'التاريخ مطلوب'),
   location: z.string().trim().max(120),
   severity: z.enum(['low', 'medium', 'high']),
-  description: z.string().trim().min(10, 'صف الواقعة في ١٠ أحرف على الأقل').max(3000, 'الوصف طويل جدًا'),
+  description: z.string().trim().min(10, 'صف الواقعة في 10 أحرف على الأقل').max(3000, 'الوصف طويل جدًا'),
 });
 type Values = z.infer<typeof schema>;
 
