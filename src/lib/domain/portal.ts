@@ -22,6 +22,8 @@ export type PortalAction = {
 };
 
 export type PortalData = {
+  /** Never true here: a flagged account gets a PortalPasswordGate instead. */
+  must_change_password?: boolean;
   school: string | null;
   student: {
     full_name: string;
@@ -48,6 +50,22 @@ export type PortalData = {
   discipline: PortalAction[];
   career: { top_1: string; top_2: string; top_3: string; submitted_at: string } | null;
 };
+
+/**
+ * While a student account still uses the password the school issued,
+ * portal_my_data() returns only this flag and no student data.
+ */
+export type PortalPasswordGate = { must_change_password: true };
+export type PortalResponse = PortalData | PortalPasswordGate;
+
+export function mustChangePassword(d: PortalResponse | null | undefined): d is PortalPasswordGate {
+  return d?.must_change_password === true;
+}
+
+/** True only for a full record (guards against any partial/unknown shape). */
+export function isPortalData(d: PortalResponse | null | undefined): d is PortalData {
+  return d != null && !mustChangePassword(d) && typeof (d as PortalData).student === 'object' && (d as PortalData).student !== null;
+}
 
 /** Arabic-Indic / Persian digits → ASCII digits; everything else dropped. */
 export function digitsOnly(value: string): string {

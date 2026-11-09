@@ -2,9 +2,10 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
-import { AlertCircle, KeyRound, LogOut } from 'lucide-react';
+import { AlertCircle, KeyRound, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/errors';
@@ -36,10 +37,14 @@ function schema(requireCurrent: boolean) {
 }
 type Values = { current: string; password: string; confirm: string };
 
+function isSamePassword(e: unknown): boolean {
+  return (e as { code?: string })?.code === 'same_password' || /different from the old/i.test((e as { message?: string })?.message ?? '');
+}
+
 function updateError(e: unknown): string {
   const code = (e as { code?: string })?.code;
   const msg = (e as { message?: string })?.message ?? '';
-  if (code === 'same_password' || /different from the old/i.test(msg)) return 'اختر كلمة مرور مختلفة عن الحالية.';
+  if (isSamePassword(e)) return 'اختر كلمة مرور مختلفة عن الحالية.';
   if (code === 'weak_password' || /weak|pwned|leaked/i.test(msg)) return 'كلمة المرور ضعيفة أو ظهرت في تسريبات معروفة. اختر كلمة أخرى.';
   if (code === 'reauthentication_needed') return 'يرجى تسجيل الخروج ثم الدخول مجددًا قبل تغيير كلمة المرور.';
   return errorMessage(e, 'تعذر تغيير كلمة المرور، يرجى المحاولة مرة أخرى.');
@@ -51,7 +56,8 @@ function updateError(e: unknown): string {
  * user has just proven it by signing in, so it is not asked again.
  */
 export function ChangePasswordForm({ requireCurrent, onDone }: { requireCurrent: boolean; onDone: () => void }) {
-  const { profile, session, refreshProfile } = useAuth();
+  const { profile, session, isStudent, refreshProfile } = useAuth();
+  const queryClient = useQueryClient();
   // Student portal accounts have no staff profile: use the signed-in email.
   const email = profile?.email ?? session?.user.email ?? '';
   const [error, setError] = React.useState<string | null>(null);
@@ -68,16 +74,22 @@ export function ChangePasswordForm({ requireCurrent, onDone }: { requireCurrent:
       }
     }
     const { error: upd } = await supabase.auth.updateUser({ password: v.password });
-    if (upd) {
+    // A student whose earlier attempt changed the password but did not reach
+    // portal_password_changed() may re-enter the same new password: let the
+    // server decide (it only clears the flag if the school password is gone).
+    if (upd && !(isStudent && !requireCurrent && isSamePassword(upd))) {
       setError(updateError(upd));
       return;
     }
-    const { error: rpc } = await supabase.rpc('password_changed');
+    // Staff clear profiles.must_change_password; student portal accounts
+    // clear student_accounts.must_change_password, which gates portal_my_data().
+    const { error: rpc } = await supabase.rpc(isStudent ? 'portal_password_changed' : 'password_changed');
     if (rpc) {
       setError(errorMessage(rpc));
       return;
     }
-    await refreshProfile();
+    if (isStudent) await queryClient.invalidateQueries({ queryKey: ['portal'] });
+    else await refreshProfile();
     toast.success('تم تغيير كلمة المرور');
     form.reset();
     onDone();
@@ -132,10 +144,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; on
   );
 }
 
-/** Full-screen gate shown after signing in with an admin-set temporary password. */
-export function ForcePasswordChangePage() {
-  useDocumentTitle('تعيين كلمة مرور جديدة');
-  const { profile, signOut } = useAuth();
+function PasswordGate({ title, children }: { title: string; children: React.ReactNode }) {
+  const { signOut } = useAuth();
   return (
     <main className="grid min-h-dvh place-items-center px-4 py-10">
       <div className="w-full max-w-md">
@@ -148,10 +158,8 @@ export function ForcePasswordChangePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring.sheet, delay: 0.1 }}
         >
-          <h1 className="text-xl font-bold">عيّن كلمة مرور خاصة بك</h1>
-          <p className="mt-1.5 text-sm text-fg-muted">
-            مرحبًا {profile?.full_name}. كلمة المرور الحالية مؤقتة وضعتها إدارة النظام؛ اختر كلمة مرور جديدة لا يعرفها غيرك قبل المتابعة.
-          </p>
+          <h1 className="text-xl font-bold">{title}</h1>
+          {children}
           <div className="mt-6">
             <ChangePasswordForm requireCurrent={false} onDone={() => {}} />
           </div>
@@ -165,5 +173,39 @@ export function ForcePasswordChangePage() {
         </m.div>
       </div>
     </main>
+  );
+}
+
+/** Full-screen gate shown after signing in with an admin-set temporary password. */
+export function ForcePasswordChangePage() {
+  useDocumentTitle('تعيين كلمة مرور جديدة');
+  const { profile } = useAuth();
+  return (
+    <PasswordGate title="عيّن كلمة مرور خاصة بك">
+      <p className="mt-1.5 text-sm text-fg-muted">
+        مرحبًا {profile?.full_name}. كلمة المرور الحالية مؤقتة وضعتها إدارة النظام؛ اختر كلمة مرور جديدة لا يعرفها غيرك قبل المتابعة.
+      </p>
+    </PasswordGate>
+  );
+}
+
+/**
+ * Student portal: shown while the account still uses the password the school
+ * issued. The server returns no student data until it is replaced.
+ */
+export function StudentPasswordChangePage() {
+  useDocumentTitle('تعيين كلمة مرور جديدة');
+  return (
+    <PasswordGate title="عيّن كلمة مرور خاصة بك">
+      <p className="mt-1.5 text-sm text-fg-muted">
+        مرحبًا بك في بوابة ولي الأمر والطالب. قبل عرض بيانات الطالب، اختر كلمة مرور جديدة خاصة بك.
+      </p>
+      <div className="mt-4 flex items-start gap-2.5 rounded-md border border-info-line bg-info-soft p-3 text-sm text-info">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
+        <p className="leading-relaxed">
+          هذا يحمي بيانات الطالب: كلمة المرور الحالية مشتركة وزّعتها المدرسة، ولن يمكن استخدامها للدخول إلى هذا الحساب بعد الآن. احتفظ بكلمة المرور الجديدة ولا تشاركها إلا مع ولي الأمر.
+        </p>
+      </div>
+    </PasswordGate>
   );
 }

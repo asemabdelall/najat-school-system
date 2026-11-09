@@ -12,14 +12,14 @@ import { useDocumentTitle, useOnline } from '@/lib/hooks';
 import { useTheme } from '@/lib/theme';
 import { pageVariants, spring } from '@/lib/motion';
 import { cn } from '@/lib/utils';
-import { initials, shortName, type PortalData } from '@/lib/domain/portal';
+import { initials, isPortalData, mustChangePassword, shortName, type PortalData, type PortalResponse } from '@/lib/domain/portal';
 import { Button } from '@/components/ui/button';
 import { ErrorState, Skeleton } from '@/components/ui/states';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/layout/Logo';
-import { ChangePasswordDialog } from '@/features/auth/ChangePassword';
+import { ChangePasswordDialog, StudentPasswordChangePage } from '@/features/auth/ChangePassword';
 import { PrintReport } from './PrintReport';
 import { SCHOOL, type PortalContext } from './ui';
 
@@ -35,7 +35,7 @@ export function usePortalQuery() {
   const { session } = useAuth();
   return useQuery({
     queryKey: ['portal', session?.user.id],
-    queryFn: async () => (unwrap(await supabase.rpc('portal_my_data')) as unknown as PortalData | null) ?? null,
+    queryFn: async () => (unwrap(await supabase.rpc('portal_my_data')) as unknown as PortalResponse | null) ?? null,
     staleTime: 60_000,
     refetchOnWindowFocus: true,
   });
@@ -284,7 +284,9 @@ export function PortalShell() {
       </div>
     );
   }
-  if (!query.data) return <Unavailable />;
+  // The server returns no data until the school-issued password is replaced.
+  if (mustChangePassword(query.data)) return <StudentPasswordChangePage />;
+  if (!isPortalData(query.data)) return <Unavailable />;
   const d = query.data;
 
   return (
