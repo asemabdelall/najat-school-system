@@ -353,7 +353,13 @@ begin
   exception when others then
     v_headers := null;
   end;
-  return coalesce(nullif(btrim(split_part(v_headers ->> 'x-forwarded-for', ',', 1)), ''), 'unknown');
+  -- Prefer the address Cloudflare stamps in front of Supabase (clients
+  -- cannot override it); fall back to the first x-forwarded-for entry.
+  return coalesce(
+    nullif(btrim(v_headers ->> 'cf-connecting-ip'), ''),
+    nullif(btrim(split_part(v_headers ->> 'x-forwarded-for', ',', 1)), ''),
+    'unknown'
+  );
 end;
 $$;
 
