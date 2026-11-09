@@ -495,6 +495,40 @@ isOneToOne: false
                   Relationships: [
 
                   ]
+                },"quiz_lookup_log": {
+                  Row: {
+                    "civil_prefix": string | null,"created_at": string | null,"found": boolean | null,"id": number,"ip": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "civil_prefix"?: string | null,"created_at"?: string | null,"found"?: boolean | null,"id"?: number,"ip"?: string | null
+                  }
+                  Update: {
+                    "civil_prefix"?: string | null,"created_at"?: string | null,"found"?: boolean | null,"id"?: number,"ip"?: string | null
+                  }
+                  Relationships: [
+
+                  ]
+                },"quiz_tokens": {
+                  Row: {
+                    "expires_at": string | null,"student_id": string | null,"token_hash": string,"used_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "expires_at"?: string | null,"student_id"?: string | null,"token_hash": string,"used_at"?: string | null
+                  }
+                  Update: {
+                    "expires_at"?: string | null,"student_id"?: string | null,"token_hash"?: string,"used_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "quiz_tokens_student_id_fkey"
+      columns: ["student_id"]
+isOneToOne: false
+      referencedRelation: "students"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"school_classes": {
                   Row: {
                     "academic_year_id": string,"capacity": number | null,"created_at": string,"grade_level": number,"id": string,"is_archived": boolean,"name": string,"room": string | null,"section": string,"track": string | null,"updated_at": string
@@ -517,28 +551,28 @@ isOneToOne: false
                   ]
                 },"school_settings": {
                   Row: {
-                    "attendance_mode": string,"follow_up_due_soon_days": number,"id": number,"periods_per_day": number,"school_name_ar": string,"school_name_en": string,"teacher_backdate_days": number,"updated_at": string,"updated_by": string | null
+                    "attendance_mode": string,"follow_up_due_soon_days": number,"id": number,"periods_per_day": number,"quiz_open": boolean,"school_name_ar": string,"school_name_en": string,"teacher_backdate_days": number,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "attendance_mode"?: string,"follow_up_due_soon_days"?: number,"id"?: number,"periods_per_day"?: number,"school_name_ar"?: string,"school_name_en"?: string,"teacher_backdate_days"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "attendance_mode"?: string,"follow_up_due_soon_days"?: number,"id"?: number,"periods_per_day"?: number,"quiz_open"?: boolean,"school_name_ar"?: string,"school_name_en"?: string,"teacher_backdate_days"?: number,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "attendance_mode"?: string,"follow_up_due_soon_days"?: number,"id"?: number,"periods_per_day"?: number,"school_name_ar"?: string,"school_name_en"?: string,"teacher_backdate_days"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "attendance_mode"?: string,"follow_up_due_soon_days"?: number,"id"?: number,"periods_per_day"?: number,"quiz_open"?: boolean,"school_name_ar"?: string,"school_name_en"?: string,"teacher_backdate_days"?: number,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
 
                   ]
                 },"student_accounts": {
                   Row: {
-                    "created_at": string,"student_id": string,"user_id": string
+                    "created_at": string,"issued_password_hash": string | null,"must_change_password": boolean,"student_id": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"student_id": string,"user_id": string
+                    "created_at"?: string,"issued_password_hash"?: string | null,"must_change_password"?: boolean,"student_id": string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"student_id"?: string,"user_id"?: string
+                    "created_at"?: string,"issued_password_hash"?: string | null,"must_change_password"?: boolean,"student_id"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -746,24 +780,30 @@ isOneToOne: false
                            },
 "portal_accounts":
 { Args: { "p_class_id": string }; Returns: {
-              "civil_id": string,"email": string,"full_name": string,"has_account": boolean,"last_sign_in_at": string,"student_id": string,"student_number": string
+              "civil_id": string,"email": string,"full_name": string,"has_account": boolean,"last_sign_in_at": string,"must_change_password": boolean,"student_id": string,"student_number": string
             }[]
                            },
 "portal_my_data":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"portal_password_changed":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "portal_set_accounts":
 { Args: { "p_password": string,"p_student_ids": (string)[] }; Returns: {
               "created": boolean,"email": string,"student_id": string
             }[]
                            },
+"quiz_client_ip":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "quiz_find_student":
 { Args: { "p_civil_id": string }; Returns: {
-              "class_name": string,"full_name": string,"grade_level": number,"section": string
+              "class_name": string,"first_name": string,"token": string
             }[]
                            },
 "quiz_submit_result":
-{ Args: { "p_civil_id": string,"p_scores": Json }; Returns: {
+{ Args: { "p_scores": Json,"p_token": string }; Returns: {
               "top_1": string,"top_2": string,"top_3": string
             }[]
                            },

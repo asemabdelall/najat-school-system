@@ -16,7 +16,20 @@ import { formatDateTime, formatNumber, kuwaitToday } from '@/lib/format';
 import { useClasses, useCurrentYear } from '@/lib/queries';
 import { buildXlsx, downloadXlsx } from '@/lib/xlsx';
 
-type Row = { student_id: string; full_name: string; student_number: string; civil_id: string | null; email: string | null; has_account: boolean; last_sign_in_at: string | null };
+type Row = {
+  student_id: string; full_name: string; student_number: string; civil_id: string | null; email: string | null;
+  has_account: boolean; last_sign_in_at: string | null;
+  /** Still on the school-issued password (null when there is no account). */
+  must_change_password: boolean | null;
+};
+
+/** Whether the student has replaced the password the school issued. */
+function PasswordState({ row }: { row: Row }) {
+  if (!row.has_account) return <span className="text-fg-subtle">—</span>;
+  return row.must_change_password === false
+    ? <Badge tone="success">غيّر كلمة المرور</Badge>
+    : <Badge tone="warning">لم يغيّر كلمة المرور بعد</Badge>;
+}
 
 const MIN_PASSWORD = 8;
 
@@ -76,6 +89,7 @@ export function StudentAccountsPage() {
         { header: 'الرقم المدني', value: (r: Row) => r.civil_id ?? '', width: 16 },
         { header: 'البريد (اسم الدخول)', value: (r: Row) => r.email ?? '', width: 34 },
         { header: 'آخر دخول', value: (r: Row) => (r.last_sign_in_at ? formatDateTime(r.last_sign_in_at) : ''), width: 22 },
+        { header: 'كلمة المرور', value: (r: Row) => (r.must_change_password === false ? 'غيّر كلمة المرور' : 'لم يغيّر كلمة المرور بعد'), width: 24 },
       ],
     }]));
 
@@ -113,6 +127,8 @@ export function StudentAccountsPage() {
             {formatNumber(rows.filter((r) => r.has_account).length)} من {formatNumber(rows.length)} طالب لديهم حساب
             {' · '}
             {formatNumber(rows.filter((r) => r.last_sign_in_at).length)} سجّلوا الدخول
+            {' · '}
+            {formatNumber(rows.filter((r) => r.has_account && r.must_change_password === false).length)} غيّروا كلمة المرور
           </p>
           <div className="ms-auto flex flex-wrap gap-2">
             <Button variant="secondary" disabled={!rows.some((r) => r.has_account)} onClick={exportExcel}><FileSpreadsheet /> Excel</Button>
@@ -132,6 +148,7 @@ export function StudentAccountsPage() {
                 <Th>الطالب</Th>
                 <Th className="hidden md:table-cell">اسم الدخول</Th>
                 <Th>الحساب</Th>
+                <Th className="hidden sm:table-cell">كلمة المرور</Th>
                 <Th className="hidden lg:table-cell">آخر دخول</Th>
               </Tr>
             </THead>
@@ -150,7 +167,11 @@ export function StudentAccountsPage() {
                     )}
                   </Td>
                   <Td className="hidden md:table-cell"><span className="ltr tabular text-sm text-fg-muted">{r.email ?? '—'}</span></Td>
-                  <Td className="whitespace-nowrap">{r.has_account ? <Badge tone="success">مفعّل</Badge> : <Badge tone="outline">لم يُنشأ</Badge>}</Td>
+                  <Td className="whitespace-nowrap">
+                    {r.has_account ? <Badge tone="success">مفعّل</Badge> : <Badge tone="outline">لم يُنشأ</Badge>}
+                    {r.has_account && <span className="mt-1 block sm:hidden"><PasswordState row={r} /></span>}
+                  </Td>
+                  <Td className="hidden whitespace-nowrap sm:table-cell"><PasswordState row={r} /></Td>
                   <Td className="hidden whitespace-nowrap text-fg-muted lg:table-cell">{r.last_sign_in_at ? formatDateTime(r.last_sign_in_at) : '—'}</Td>
                 </Tr>
               ))}
@@ -171,6 +192,9 @@ export function StudentAccountsPage() {
             <span className="block">
               {creating > 0 && <>سيُنشأ {formatNumber(creating)} حساب جديد. </>}
               اكتب كلمة المرور التي سيدخل بها الطلاب المحددون وأولياء أمورهم.
+            </span>
+            <span className="block text-fg-muted">
+              هذه كلمة مرور مؤقتة: عند أول دخول يُطلب من الطالب اختيار كلمة مرور خاصة به قبل عرض أي بيانات.
             </span>
             {resetting > 0 && (
               <span className="flex gap-2 font-semibold text-warning">

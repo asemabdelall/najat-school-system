@@ -13,7 +13,9 @@ const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const cors = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGIN') ?? '*',
+  // Only the school app may call this from a browser; ALLOWED_ORIGIN
+  // overrides it (e.g. a preview deployment). Never '*'.
+  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGIN') || 'https://najat-school-system.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };

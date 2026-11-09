@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activityFeed, attendanceTone, dayKind, digitsOnly, initials, monthGrid, monthsBetween, periodStats, portalAlerts, shortName, summarizeDay } from './portal';
+import { activityFeed, attendanceTone, dayKind, digitsOnly, initials, isPortalData, monthGrid, monthsBetween, mustChangePassword, periodStats, portalAlerts, shortName, summarizeDay } from './portal';
 
 describe('portal helpers', () => {
   it('normalises Arabic and Persian digits and drops separators', () => {
@@ -96,5 +96,22 @@ describe('portal calendar and home rules', () => {
   it('shortens names and makes initials', () => {
     expect(shortName('يوسف أحمد خالد المنصور')).toBe('يوسف المنصور');
     expect(initials('يوسف أحمد خالد المنصور')).toBe('يم');
+  });
+});
+
+describe('portal password gate', () => {
+  it('recognises the server gate response', () => {
+    expect(mustChangePassword({ must_change_password: true })).toBe(true);
+    expect(isPortalData({ must_change_password: true })).toBe(false);
+  });
+  it('treats null, partial and full payloads safely', () => {
+    expect(mustChangePassword(null)).toBe(false);
+    expect(mustChangePassword(undefined)).toBe(false);
+    expect(isPortalData(null)).toBe(false);
+    expect(isPortalData({} as never)).toBe(false);
+    const full = { school: null, student: { full_name: 'طالب', student_number: '1', civil_id_last4: '1234', status: 'active', guardian_name: null, class_name: null, grade_level: null, year_name: null, year_closed: false }, attendance: { present: 0, late: 0, absent: 0, excused: 0, absent_days: 0, recorded_days: 0, rate: null }, days: [], excuses: [], behavior: [], discipline: [], career: null };
+    expect(mustChangePassword(full)).toBe(false);
+    expect(isPortalData(full)).toBe(true);
+    expect(isPortalData({ ...full, must_change_password: false })).toBe(true);
   });
 });

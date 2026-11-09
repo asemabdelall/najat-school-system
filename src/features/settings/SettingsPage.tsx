@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Field } from '@/components/ui/field';
-import { Input, Select } from '@/components/ui/input';
+import { Checkbox, Input, Select } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/states';
@@ -34,7 +34,8 @@ function SchoolSettingsForm({ settings }: { settings: SchoolSettings }) {
     mutationFn: async () => {
       const rows = unwrap(await supabase.from('school_settings').update({
         school_name_ar: v.school_name_ar.trim(), school_name_en: v.school_name_en.trim(), attendance_mode: v.attendance_mode,
-        periods_per_day: v.periods_per_day, teacher_backdate_days: v.teacher_backdate_days, follow_up_due_soon_days: v.follow_up_due_soon_days, updated_by: profile?.id,
+        periods_per_day: v.periods_per_day, teacher_backdate_days: v.teacher_backdate_days, follow_up_due_soon_days: v.follow_up_due_soon_days,
+        quiz_open: v.quiz_open, updated_by: profile?.id,
       }).eq('id', 1).select('id'));
       if (!rows.length) throw { code: '42501' };
     },
@@ -67,6 +68,18 @@ function SchoolSettingsForm({ settings }: { settings: SchoolSettings }) {
           <Field label="تنبيه اقتراب موعد المتابعة (أيام)" htmlFor="s-due" hint="يُشعَر المسؤول عند اقتراب تاريخ الاستحقاق بهذا العدد من الأيام.">
             <Input type="number" min={1} max={14} value={v.follow_up_due_soon_days} onChange={(e) => setV({ ...v, follow_up_due_soon_days: Math.min(14, Math.max(1, Number(e.target.value) || 1)) })} />
           </Field>
+          <div className="flex items-start gap-3 rounded-md border border-line p-3 md:col-span-2">
+            <Checkbox id="s-quiz-open" className="mt-0.5" checked={v.quiz_open} onChange={(e) => setV({ ...v, quiz_open: e.target.checked })} aria-describedby="s-quiz-open-hint" />
+            <div className="min-w-0">
+              <label htmlFor="s-quiz-open" className="flex flex-wrap items-center gap-2 text-sm font-bold text-fg-strong">
+                فتح اختبار الميول المهنية للطلاب
+                {v.quiz_open ? <Badge tone="success">مفتوح</Badge> : <Badge tone="warning">مغلق</Badge>}
+              </label>
+              <p id="s-quiz-open-hint" className="mt-1 text-xs leading-relaxed text-fg-muted">
+                عند الإغلاق يتوقف موقع الاختبار تمامًا: لا يمكن البحث بالرقم المدني ولا إرسال النتائج. أغلقه خارج أوقات تطبيق الاختبار.
+              </p>
+            </div>
+          </div>
           <div className="rounded-md bg-surface-sunken p-3 text-sm text-fg-muted md:col-span-2">
             المنطقة الزمنية: <span className="ltr font-semibold text-fg">Asia/Kuwait (UTC+3)</span> — ثابتة لجميع التواريخ والتقارير. أيام الدراسة: الأحد–الخميس.
           </div>
